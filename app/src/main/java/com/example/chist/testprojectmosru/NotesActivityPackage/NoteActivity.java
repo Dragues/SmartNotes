@@ -3,12 +3,14 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
@@ -24,10 +26,15 @@ public class NoteActivity extends AppCompatActivity {
 
     public static String HEADERTAG = "RESULT_HEADER";
     public static String BODYTAG = "RESULT_BODY";
+    public static String MARKERTAG = "RESULT_MARKER";
 
-    private String noteHeader;
-    private String noteBody;
-    private int markerLvl;
+    // need optimize logic
+    private String headerOld;
+    private String bodyOld;
+    private String headerNew;
+    private String bodyNew;
+    private int markerLvlOld;
+    private int markerLvlNew;
     private HashMap<Integer,Intent> mapPendings = new HashMap<>(); // pendings for update anything
     private TextView header, body;
 
@@ -40,16 +47,16 @@ public class NoteActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(getString(R.string.viewer_note));
 
         Bundle bundle = getIntent().getExtras();
-        noteHeader = bundle.getString(FirstLevelActivity.HEADERTAG);
-        noteBody = bundle.getString(FirstLevelActivity.BODYTAG);
-        markerLvl = bundle.getInt(FirstLevelActivity.MARKERTAG);
+        headerOld = headerNew = bundle.getString(FirstLevelActivity.HEADERTAG);
+        bodyOld = bodyNew = bundle.getString(FirstLevelActivity.BODYTAG);
+        markerLvlOld = markerLvlNew =  bundle.getInt(FirstLevelActivity.MARKERTAG);
 
         header = (TextView)findViewById(R.id.header);
         body = (TextView)findViewById(R.id.body);
-        header.setText(noteHeader);
-        body.setText(noteBody);
+        header.setText(headerNew);
+        body.setText(bodyNew);
 
-        updateBackground(this, markerLvl);
+        updateBackground(this, markerLvlNew);
     }
 
     private void updateBackground(Context ctx, int markerLvl) {
@@ -67,7 +74,7 @@ public class NoteActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.edit:
-                Dialog modifyDialog = new Dialogs.ModifyDialog(this, noteHeader, noteBody);
+                Dialog modifyDialog = new Dialogs.ModifyDialog(this, headerNew, bodyNew);
                 modifyDialog.setCancelable(true);
                 modifyDialog.show();
                 break;
@@ -99,10 +106,12 @@ public class NoteActivity extends AppCompatActivity {
     private void processPendingIntent(Map.Entry<Integer, Intent> entry) {
         switch(entry.getKey()) {
             case 100500: // update data after modify
-                noteHeader = entry.getValue().getStringExtra(HEADERTAG);
-                noteBody = entry.getValue().getStringExtra(BODYTAG);
-                header.setText(noteHeader);
-                body.setText(noteBody);
+                headerNew = entry.getValue().getStringExtra(HEADERTAG);
+                bodyNew = entry.getValue().getStringExtra(BODYTAG);
+                markerLvlNew = entry.getValue().getIntExtra(MARKERTAG, 0);
+                header.setText(headerNew);
+                body.setText(bodyNew);
+                updateBackground(this,markerLvlNew);
                 break;
         }
     }
@@ -111,5 +120,16 @@ public class NoteActivity extends AppCompatActivity {
     protected void onPostResume() {
         super.onPostResume();
         processPendingIntents();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (!bodyOld.equals(bodyNew) || !headerOld.equals(headerNew) || markerLvlNew != markerLvlOld){
+            DBHelper helper = new DBHelper(this);
+            helper.deleteNote(headerOld, bodyOld);
+            helper.insertNote(headerNew, bodyNew, markerLvlNew);
+            helper.close();
+        }
     }
 }

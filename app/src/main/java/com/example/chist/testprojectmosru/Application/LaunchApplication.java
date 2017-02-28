@@ -10,6 +10,7 @@ import android.os.Bundle;
  */
 public class LaunchApplication extends Application implements Application.ActivityLifecycleCallbacks {
 
+    public static final String APP_PREFERENCES = "global_prefs";
     private static LaunchApplication _instance;
     private static boolean isActivityVisible;
     private static Context ctxActivity = null;

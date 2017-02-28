@@ -71,6 +71,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
+    public void insertNote(String header, String body, int marker) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.NoteColumns.HEADER,header);
+        cv.put(DBHelper.NoteColumns.BODY, body);
+        cv.put(DBHelper.NoteColumns.MARKER, marker);
+        insertNote(cv);
+    }
+
     public void insertNote(ContentValues cv) {
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);

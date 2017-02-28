@@ -129,8 +129,11 @@ public class FirstLevelActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (!helper.isOpen())
+        if (!helper.isOpen()){
             helper.open();
+            adapter.swapCursor(helper.getNotesCursor()); // We can have modifications after NoteActivity.
+                                                         // ....i can find another way for notify about modifications
+        }
         if(observers.size() == 0)
             registerContentObservers();
     }
