@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/dialog_shape"
+    android:minWidth="330dp"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/dialogheader"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:background="@drawable/mitem_bg_lightgrey"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:singleLine="true"
+        android:text="@string/new_note"
+        android:textColor="#000000"
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/shape_input_dialog_edittext"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:hint="header"
+        android:maxLines="2"
+        android:maxWidth="330dp"
+        android:minHeight="48dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:text=""
+        android:textColor="#000000"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/shape_input_dialog_edittext"
+        android:gravity="center"
+        android:hint="body"
+        android:maxWidth="330dp"
+        android:minHeight="48dp"
+        android:text=""
+        android:textColor="#222222"
+        android:textSize="16sp" />
+
+    <SeekBar
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/priority"
+        android:layout_marginTop="10dp"
+        android:layout_gravity="center_horizontal"
+        android:max="2"
+        android:indeterminate="false"
+        android:progress="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/cancelbutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/mitem_bg_lightgrey"
+            android:gravity="center"
+            android:padding="13dp"
+            android:singleLine="true"
+            android:text="@string/otboy"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/addbutton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_weight="1"
+            android:background="@drawable/mitem_bg_lightgrey"
+            android:gravity="center"
+            android:padding="13dp"
+            android:text="@string/add"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+    </LinearLayout>
+</LinearLayout>

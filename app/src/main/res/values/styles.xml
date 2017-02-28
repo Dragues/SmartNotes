@@ -1,0 +1,19 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme"  parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:displayOptions">homeAsUp|showHome</item>
+        <item name="windowActionBar">true</item>
+        <item name="colorPrimary">#039be5</item>
+        <item name="colorPrimaryDark">#78909c</item>
+        <item name="colorAccent">#29b6f6</item>
+    </style>
+
+    <style name="ContainerDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@color/item_bg_toolbar_default</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+
+</resources>

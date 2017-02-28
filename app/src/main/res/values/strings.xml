@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Smart Notes</string>
+    <string name="action_settings">Settings</string>
+    <string name="viewer_note">Viewer note</string>
+    <string name="new_note" >New note</string>
+    <string name="otboy">Отбой!</string>
+    <string name="add">Добавить!</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+
+</resources>
