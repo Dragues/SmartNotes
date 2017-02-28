@@ -66,6 +66,7 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.edit, menu);
+        getMenuInflater().inflate(R.menu.revert, menu);
         getMenuInflater().inflate(R.menu.clear, menu);
         return super.onCreateOptionsMenu(menu);
     }
@@ -74,11 +75,20 @@ public class NoteActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.edit:
-                Dialog modifyDialog = new Dialogs.ModifyDialog(this, headerNew, bodyNew);
+                Dialog modifyDialog = new Dialogs.ModifyDialog(this, headerNew, bodyNew, markerLvlNew);
                 modifyDialog.setCancelable(true);
                 modifyDialog.show();
                 break;
+            case R.id.revert:
+                header.setText(headerOld);
+                body.setText(bodyOld);
+                headerNew = headerOld;
+                bodyNew = bodyOld;
+                break;
             case R.id.deletenotes:
+                    DBHelper helper = new DBHelper(this);
+                    helper.deleteNote(headerNew, bodyNew);
+                    helper.close();
                 finish();
                 break;
             case android.R.id.home:

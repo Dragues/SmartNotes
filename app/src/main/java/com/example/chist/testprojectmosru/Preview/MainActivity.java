@@ -1,4 +1,4 @@
-package com.example.chist.testprojectmosru;
+package com.example.chist.testprojectmosru.Preview;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -10,6 +10,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.chist.testprojectmosru.NotesActivityPackage.FirstLevelActivity;
+import com.example.chist.testprojectmosru.R;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 

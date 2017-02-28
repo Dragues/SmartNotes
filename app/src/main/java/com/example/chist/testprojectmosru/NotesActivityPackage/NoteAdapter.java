@@ -53,18 +53,19 @@ public class NoteAdapter extends CursorAdapter {
         ViewHolder holder  =   (ViewHolder)    view.getTag();
         final String header = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.HEADER));
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
+        final int  marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
         holder.header.setText(header);
         holder.body.setText(body);
         holder.edit.setOnClickListener(new View.OnClickListener() { // I don't like set listeners here =(
             @Override
             public void onClick(View v) {
-                Dialog dialog = new Dialogs.AddingDialog(ctx, header, body, ((FirstLevelActivity)ctx).helper);
+                Dialog dialog = new Dialogs.AddingDialog(ctx, header, body, marker, ((FirstLevelActivity)ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();
             }
         });
 
-        view.setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER))));
+        view.setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
         view.setTag(holder);
     }
 

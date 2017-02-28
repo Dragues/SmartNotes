@@ -9,7 +9,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name=".Preview.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme"
             android:configChanges="mcc|mnc|touchscreen|keyboard|keyboardHidden|navigation|uiMode|orientation|screenSize">

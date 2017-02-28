@@ -35,14 +35,14 @@ public class Dialogs {
         private String headerOld;
         private String bodyOld;
 
-        public AddingDialog(Context ctx, String header, String body, DBHelper helper) {
+        public AddingDialog(Context ctx, String header, String body, int marker, DBHelper helper) {
             super(ctx, R.style.ContainerDialogTheme);
             this.ctx = ctx;
             this.headerOld = header;
             this.bodyOld = body;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
-            populate(header, body, helper);
+            populate(header, body, marker, helper);
 
 
             this.setOnDismissListener(new OnDismissListener() {
@@ -53,11 +53,12 @@ public class Dialogs {
             });
         }
 
-        private void populate(final String header, final String body, final DBHelper helper) {
+        private void populate(final String header, final String body,final int marker, final DBHelper helper) {
             View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
                 final EditText headerView = (EditText) view.findViewById(R.id.header);
                 final EditText bodyView = (EditText) view.findViewById(R.id.body);
                 final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
+                barPriority.setProgress(marker);
                 if (header != null)
                     headerView.setText(header);
                 if (body != null)
@@ -70,10 +71,18 @@ public class Dialogs {
                 @Override
                 public void onClick(View v) {
                     if(headerView.getText().length()!=0 && bodyView.getText().length()!=0) {
-                        if(header!= null && body != null && header.equals(headerOld) && body.equals(bodyOld)) {
+                        if(header!= null && body != null && header.equals(headerView.getText().toString())
+                                && body.equals(bodyView.getText().toString()) && marker == barPriority.getProgress()) {
                             dismiss();
                             Toast.makeText(ctx,"Already added", Toast.LENGTH_SHORT).show();
                             return; // the same note
+                        }
+                        // delete old
+                        if(header!= null && body != null){
+                            ContentValues cvOld = new ContentValues();
+                            cvOld.put(DBHelper.NoteColumns.HEADER,header);
+                            cvOld.put(DBHelper.NoteColumns.BODY, body);
+                            helper.deleteNote(cvOld);
                         }
                         // add new
                         ContentValues cv = new ContentValues();
@@ -82,13 +91,7 @@ public class Dialogs {
                         cv.put(DBHelper.NoteColumns.MARKER, barPriority.getProgress());
                         helper.insertNote(cv);
 
-                        // delete old
-                        if(header!= null && body != null){
-                            ContentValues cvOld = new ContentValues();
-                            cvOld.put(DBHelper.NoteColumns.HEADER,header);
-                            cvOld.put(DBHelper.NoteColumns.BODY, body);
-                            helper.deleteNote(cvOld);
-                        }
+
 
 
                     }
@@ -148,12 +151,12 @@ public class Dialogs {
 
         private Context ctx;
 
-        public ModifyDialog(Context ctx, String header, String body) {
+        public ModifyDialog(Context ctx, String header, String body, int marker) {
             super(ctx, R.style.ContainerDialogTheme);
             this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
-            populate(header, body);
+            populate(header, body, marker);
 
 
             this.setOnDismissListener(new OnDismissListener() {
@@ -164,11 +167,12 @@ public class Dialogs {
             });
         }
 
-        private void populate(final String header, final String body) {
+        private void populate(final String header, final String body, int marker) {
             View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
             final EditText headerView = (EditText) view.findViewById(R.id.header);
             final EditText bodyView = (EditText) view.findViewById(R.id.body);
             final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
+            barPriority.setProgress(marker);
             if (header != null)
                 headerView.setText(header);
             if (body != null)

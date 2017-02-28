@@ -94,7 +94,7 @@ public class FirstLevelActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add_note:
-                Dialog addingDialog = new Dialogs.AddingDialog(this, null, null, helper);
+                Dialog addingDialog = new Dialogs.AddingDialog(this, null, null, 1, helper);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
                 break;
