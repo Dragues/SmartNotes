@@ -38,6 +38,12 @@
 
     </LinearLayout>
 
+    <ImageView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:id="@+id/export"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/exported"/>
 
     <ImageView
         android:layout_width="30dp"

@@ -11,6 +11,7 @@
 
     <color name="dialog_bg_color">#ffffff</color>
     <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
 
     <color name="greenalpha">#448bc34a</color>
     <color name="yellowalpha">#44fff176</color>

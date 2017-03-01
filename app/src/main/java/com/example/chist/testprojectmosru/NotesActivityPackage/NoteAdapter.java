@@ -27,7 +27,7 @@ public class NoteAdapter extends CursorAdapter {
         protected TextView body;
         protected ImageView photo;
         private  ImageView edit;
-        private TextView coordsAndTimeStamp;
+        private  ImageView export;
     }
 
 
@@ -43,6 +43,7 @@ public class NoteAdapter extends CursorAdapter {
         holder.header = (TextView) view.findViewById(R.id.header);
         holder.body = (TextView) view.findViewById(R.id.body);
         holder.edit = (ImageView) view.findViewById(R.id.edit);
+        holder.export = (ImageView) view.findViewById(R.id.export);
         view.setTag(holder);
         return view;
     }
@@ -56,17 +57,41 @@ public class NoteAdapter extends CursorAdapter {
         final int  marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
         holder.header.setText(header);
         holder.body.setText(body);
+        holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
         holder.edit.setOnClickListener(new View.OnClickListener() { // I don't like set listeners here =(
             @Override
             public void onClick(View v) {
-                Dialog dialog = new Dialogs.AddingDialog(ctx, header, body, marker, ((FirstLevelActivity)ctx).helper);
+                Dialog dialog = new Dialogs.AddingDialog(ctx, header, body, marker, ((FirstLevelActivity) ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();
             }
         });
+        holder.export.setOnClickListener(new ExportListener(holder.export, header, body));
 
         view.setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
         view.setTag(holder);
     }
 
+    private class ExportListener implements View.OnClickListener {
+
+        private String header;
+        private String body;
+        private ImageView exportView;
+
+        public ExportListener(ImageView export, String header, String body) {
+            this.header = header;
+            this.body = body;
+            this.exportView = export;
+        }
+
+        @Override
+        public void onClick(View v) {
+            if(!Utils.containsFile(header))
+                Utils.exportToFile(ctx, header, body);
+            else
+                Utils.deleteFileFromSd(ctx, header);
+            // Export or delele can be process with errors, so i prefer check it there.
+            exportView.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
+        }
+    }
 }
