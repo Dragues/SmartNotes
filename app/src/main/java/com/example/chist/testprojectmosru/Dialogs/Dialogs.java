@@ -17,6 +17,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.NotesActivityPackage.NoteActivity;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
@@ -32,14 +33,10 @@ public class Dialogs {
     public static class AddingDialog extends Dialog {
 
         private Context ctx;
-        private String headerOld;
-        private String bodyOld;
 
         public AddingDialog(Context ctx, String header, String body, int marker, DBHelper helper) {
             super(ctx, R.style.ContainerDialogTheme);
             this.ctx = ctx;
-            this.headerOld = header;
-            this.bodyOld = body;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
             populate(header, body, marker, helper);
@@ -70,30 +67,28 @@ public class Dialogs {
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(headerView.getText().length()!=0 && bodyView.getText().length()!=0) {
-                        if(header!= null && body != null && header.equals(headerView.getText().toString())
+                    if (headerView.getText().length() != 0 && bodyView.getText().length() != 0) {
+                        if (header != null && body != null && header.equals(headerView.getText().toString())
                                 && body.equals(bodyView.getText().toString()) && marker == barPriority.getProgress()) {
                             dismiss();
-                            Toast.makeText(ctx,"Already added", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ctx, "Already added", Toast.LENGTH_SHORT).show();
                             return; // the same note
                         }
                         // delete old
-                        if(header!= null && body != null){
+                        if (header != null && body != null) {
                             ContentValues cvOld = new ContentValues();
-                            cvOld.put(DBHelper.NoteColumns.HEADER,header);
+                            cvOld.put(DBHelper.NoteColumns.HEADER, header);
                             cvOld.put(DBHelper.NoteColumns.BODY, body);
                             helper.deleteNote(cvOld);
                         }
                         // add new
                         ContentValues cv = new ContentValues();
-                        cv.put(DBHelper.NoteColumns.HEADER,headerView.getText().toString());
+                        cv.put(DBHelper.NoteColumns.HEADER, headerView.getText().toString());
                         cv.put(DBHelper.NoteColumns.BODY, bodyView.getText().toString());
                         cv.put(DBHelper.NoteColumns.MARKER, barPriority.getProgress());
                         helper.insertNote(cv);
-
-
-
-
+                        if (header != null)
+                            Utils.renameFiles(header, headerView.getText().toString());
                     }
                     dismiss();
                 }
@@ -102,7 +97,7 @@ public class Dialogs {
             cancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                   dismiss();
+                    dismiss();
                 }
             });
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));

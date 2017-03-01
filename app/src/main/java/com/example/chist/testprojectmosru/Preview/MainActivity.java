@@ -69,14 +69,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Intent intent = new Intent(this, FirstLevelActivity.class);
                 startActivity(intent);
                 break;
-//            case R.id.level2:
-//            case R.id.level3:
-//            case R.id.level4:
-//            case R.id.level5:
-//            case R.id.level6:
-//            case R.id.level7:
-//            case R.id.level8:
-//   return;
         }
     }
 

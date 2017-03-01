@@ -4,10 +4,13 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
@@ -37,6 +40,7 @@ public class NoteActivity extends AppCompatActivity {
     private int markerLvlNew;
     private HashMap<Integer,Intent> mapPendings = new HashMap<>(); // pendings for update anything
     private TextView header, body;
+    private ImageView photo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,10 +57,17 @@ public class NoteActivity extends AppCompatActivity {
 
         header = (TextView)findViewById(R.id.header);
         body = (TextView)findViewById(R.id.body);
+        photo = (ImageView)findViewById(R.id.notephoto);
         header.setText(headerNew);
         body.setText(bodyNew);
 
         updateBackground(this, markerLvlNew);
+        Bitmap bitmap = Utils.getSavedBitmap(headerOld, true);
+        if(bitmap != null)
+            photo.setImageBitmap(bitmap);
+        else
+            photo.setImageBitmap(BitmapFactory.decodeResource(getResources(),
+                    R.drawable.no_data));
     }
 
     private void updateBackground(Context ctx, int markerLvl) {
@@ -138,6 +149,8 @@ public class NoteActivity extends AppCompatActivity {
         if (!bodyOld.equals(bodyNew) || !headerOld.equals(headerNew) || markerLvlNew != markerLvlOld){
             DBHelper helper = new DBHelper(this);
             helper.deleteNote(headerOld, bodyOld);
+            if (header != null)
+                Utils.renameFiles(headerOld, headerNew);
             helper.insertNote(headerNew, bodyNew, markerLvlNew);
             helper.close();
         }

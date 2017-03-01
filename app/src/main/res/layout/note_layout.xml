@@ -3,24 +3,33 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/totalnote"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center">
-
+    android:layout_height="match_parent">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Large Text"
+        android:text="Заголовок новости"
         android:textColor="@color/black"
-        android:textSize="40sp"
-        android:id="@+id/header" />
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:id="@+id/header"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="20dp"/>
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:id="@+id/notephoto"
+        android:layout_gravity="center_horizontal" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Large Text"
+        android:text="Тут будет много текста, который кто то будет читать..."
         android:textColor="@color/black"
         android:id="@+id/body"
         android:textSize="30sp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
         android:layout_marginTop="20dp"/>
 </LinearLayout>

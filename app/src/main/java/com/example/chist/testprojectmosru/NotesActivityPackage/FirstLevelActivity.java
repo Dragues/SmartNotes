@@ -4,6 +4,8 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,12 +14,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.LinkedList;
 
 /**
@@ -30,9 +36,16 @@ public class FirstLevelActivity extends AppCompatActivity {
     public static String BODYTAG = "body";
     public static String MARKERTAG = "marker";
 
+    public static final int SELECT_PHOTO = 100;
     DBHelper helper;
 
     private ListView view;
+    private String headerOnImageUpdate;
+
+    public void setHeaderOnImageUpdate(String headerOnImageUpdate) {
+        this.headerOnImageUpdate = headerOnImageUpdate;
+    }
+
     private NoteAdapter adapter;
     private LinkedList<ContentObserver> observers = new LinkedList<>();
 
@@ -137,4 +150,29 @@ public class FirstLevelActivity extends AppCompatActivity {
         if(observers.size() == 0)
             registerContentObservers();
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
+        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+        switch(requestCode) {
+            case SELECT_PHOTO:
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = imageReturnedIntent.getData();
+                    InputStream imageStream = null;
+                    try {
+                        imageStream = FirstLevelActivity.this.getContentResolver().openInputStream(selectedImage);
+                        Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                        Utils.saveBitmap(yourSelectedImage, headerOnImageUpdate);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    if(headerOnImageUpdate != null) {
+                        this.getContentResolver().notifyChange(Utils.getImageUri(headerOnImageUpdate),null);
+                        headerOnImageUpdate = null;
+                    }
+                }
+        }
+    }
+
 }
