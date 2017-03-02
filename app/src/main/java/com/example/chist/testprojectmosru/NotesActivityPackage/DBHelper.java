@@ -8,6 +8,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Color;
 
+import com.example.chist.testprojectmosru.Application.Utils;
+
+import java.io.File;
+
 /**
  * Created by 1 on 27.02.2017.
  */
@@ -31,6 +35,10 @@ public class DBHelper extends SQLiteOpenHelper {
     public void deleteAll() {
         db.delete(tableNotesName, null, null);
         ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+        if(new File(Utils.getImagePathInDevice().getAbsolutePath()).exists()){
+            Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(false)); // i don't want to delete above dirs
+            Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(true));
+        }
     }
 
     public interface NoteColumns {
@@ -41,9 +49,8 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public enum Order {
-        ALPHABET,
-        SCORE,
-        ID
+        ALPHABETHEADER,
+        PRIORITY
     }
 
     public DBHelper(Context context) {
@@ -57,7 +64,7 @@ public class DBHelper extends SQLiteOpenHelper {
         //Log.d(HELPER, "--- onCreate  ---");
         db.execSQL("create table " + tableNotesName + " ("
                 + NoteColumns.ID + " integer primary key autoincrement," // noteId
-                + NoteColumns.HEADER + " text," // title
+                + NoteColumns.HEADER + " text not null unique," // title
                 + NoteColumns.BODY + " text," // body
                 + NoteColumns.MARKER + " integer" + ");"); // priority
     }

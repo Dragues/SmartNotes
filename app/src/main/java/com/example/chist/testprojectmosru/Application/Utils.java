@@ -1,5 +1,6 @@
 package com.example.chist.testprojectmosru.Application;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,6 +9,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
 import com.example.chist.testprojectmosru.R;
 
 import java.io.BufferedReader;
@@ -74,8 +76,22 @@ public class Utils {
         }
     }
 
-    public static boolean writeFileSD(Context ctx, String filename, String content) {
+    public static void deletesCachedImages(Context ctx, String filename){
 
+        File notePathLarge = getImagePathInDevice(true);
+        File notePathSmall = getImagePathInDevice(false);
+
+        File sdFileLarge = new File(notePathLarge, filename);
+        File sdFileSmall = new File(notePathSmall, filename);
+
+        boolean a = sdFileLarge.delete();
+        boolean b = sdFileSmall.delete(); // need call it subsequently
+        if (a || b)
+            Toast.makeText(ctx, "Related cached files was deleted " + filename, Toast.LENGTH_LONG).show();
+
+    }
+
+    public static boolean writeFileSD(Context ctx, String filename, String content) {
         File notePath = getNotePathInDevice();
         if(!notePath.exists())
             notePath.mkdirs();
@@ -136,8 +152,8 @@ public class Utils {
        return Environment.getExternalStorageDirectory();
     }
 
-    public static Uri getImageUri(String header) {
-        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/image/" + header);
+    public static Uri getImageUri(int id) {
+        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/image/" + id);
     }
 
     public static void saveBitmap(Bitmap yourSelectedImage, String header) {
@@ -153,7 +169,6 @@ public class Utils {
 
         saveFileInDirectory(largeImagePath, header, yourSelectedImage, false);
         saveFileInDirectory(smallImagePath, header, yourSelectedImage, true);
-
     }
 
     private static void saveFileInDirectory(File smallImagePath, String header, Bitmap bitmap, Boolean needCrop) {
@@ -171,9 +186,9 @@ public class Utils {
         }
     }
 
-    public static Bitmap getSavedBitmap(String header, boolean large) {
+    public static Bitmap getSavedBitmap(int id, boolean large) {
         Bitmap bitmap=null;
-        File f = new File(Utils.getImagePathInDevice(large).getAbsolutePath() + "/"+header);
+        File f = new File(Utils.getImagePathInDevice(large).getAbsolutePath() + "/"+id);
         if (!f.exists())
             return null;
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -186,6 +201,17 @@ public class Utils {
         return bitmap;
     }
 
+    public static ContentValues prepareContentValues(int id, String header, String body, int marker) {
+        ContentValues values = new ContentValues();
+        if(id != -1)
+            values.put(DBHelper.NoteColumns.ID, id);
+        if (header != null)
+        values.put(DBHelper.NoteColumns.HEADER, header);
+        if (body != null)
+        values.put(DBHelper.NoteColumns.BODY, body);
+        values.put(DBHelper.NoteColumns.MARKER, marker);
+        return values;
+    }
 
     public static void renameFiles(String oldName, String newName) {
         File fLargeOld = new File(getImagePathInDevice(true),oldName);
@@ -198,5 +224,12 @@ public class Utils {
 
     private static boolean rename(File from, File to) {
         return from.getParentFile().exists() && from.exists() && from.renameTo(to);
+    }
+
+
+    public static void deleteAllFilesInDir(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                child.delete();
     }
 }

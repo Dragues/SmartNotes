@@ -1,24 +1,23 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +29,7 @@ public class NoteActivity extends AppCompatActivity {
     public static String HEADERTAG = "RESULT_HEADER";
     public static String BODYTAG = "RESULT_BODY";
     public static String MARKERTAG = "RESULT_MARKER";
+    public static final int requestCodeUpdateData = 100500;
 
     // need optimize logic
     private String headerOld;
@@ -38,9 +38,10 @@ public class NoteActivity extends AppCompatActivity {
     private String bodyNew;
     private int markerLvlOld;
     private int markerLvlNew;
-    private HashMap<Integer,Intent> mapPendings = new HashMap<>(); // pendings for update anything
+    private HashMap<Integer, Intent> mapPendings = new HashMap<>(); // pendings for update anything
     private TextView header, body;
     private ImageView photo;
+    private int idNote;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,25 +54,31 @@ public class NoteActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         headerOld = headerNew = bundle.getString(FirstLevelActivity.HEADERTAG);
         bodyOld = bodyNew = bundle.getString(FirstLevelActivity.BODYTAG);
-        markerLvlOld = markerLvlNew =  bundle.getInt(FirstLevelActivity.MARKERTAG);
-
-        header = (TextView)findViewById(R.id.header);
-        body = (TextView)findViewById(R.id.body);
-        photo = (ImageView)findViewById(R.id.notephoto);
+        markerLvlOld = markerLvlNew = bundle.getInt(FirstLevelActivity.MARKERTAG);
+        idNote = bundle.getInt(FirstLevelActivity.ID);
+        header = (TextView) findViewById(R.id.header);
+        body = (TextView) findViewById(R.id.body);
+        photo = (ImageView) findViewById(R.id.notephoto);
         header.setText(headerNew);
         body.setText(bodyNew);
 
         updateBackground(this, markerLvlNew);
-        Bitmap bitmap = Utils.getSavedBitmap(headerOld, true);
-        if(bitmap != null)
+        Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
+        if (bitmap != null)
             photo.setImageBitmap(bitmap);
         else
             photo.setImageBitmap(BitmapFactory.decodeResource(getResources(),
                     R.drawable.no_data));
+        photo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // creating popup in fullscreen
+            }
+        });
     }
 
     private void updateBackground(Context ctx, int markerLvl) {
-        findViewById(R.id.totalnote).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx,markerLvl));
+        findViewById(R.id.totalnote).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, markerLvl));
     }
 
     @Override
@@ -84,7 +91,7 @@ public class NoteActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.edit:
                 Dialog modifyDialog = new Dialogs.ModifyDialog(this, headerNew, bodyNew, markerLvlNew);
                 modifyDialog.setCancelable(true);
@@ -97,9 +104,9 @@ public class NoteActivity extends AppCompatActivity {
                 bodyNew = bodyOld;
                 break;
             case R.id.deletenotes:
-                    DBHelper helper = new DBHelper(this);
-                    helper.deleteNote(headerNew, bodyNew);
-                    helper.close();
+                DBHelper helper = new DBHelper(this);
+                helper.deleteNote(headerNew, bodyNew);
+                helper.close();
                 finish();
                 break;
             case android.R.id.home:
@@ -125,14 +132,14 @@ public class NoteActivity extends AppCompatActivity {
     }
 
     private void processPendingIntent(Map.Entry<Integer, Intent> entry) {
-        switch(entry.getKey()) {
-            case 100500: // update data after modify
+        switch (entry.getKey()) {
+            case requestCodeUpdateData: // update data after modify
                 headerNew = entry.getValue().getStringExtra(HEADERTAG);
                 bodyNew = entry.getValue().getStringExtra(BODYTAG);
                 markerLvlNew = entry.getValue().getIntExtra(MARKERTAG, 0);
                 header.setText(headerNew);
                 body.setText(bodyNew);
-                updateBackground(this,markerLvlNew);
+                updateBackground(this, markerLvlNew);
                 break;
         }
     }
@@ -146,13 +153,14 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (!bodyOld.equals(bodyNew) || !headerOld.equals(headerNew) || markerLvlNew != markerLvlOld){
+        if (!bodyOld.equals(bodyNew) || !headerOld.equals(headerNew) || markerLvlNew != markerLvlOld) {
             DBHelper helper = new DBHelper(this);
-            helper.deleteNote(headerOld, bodyOld);
-            if (header != null)
-                Utils.renameFiles(headerOld, headerNew);
-            helper.insertNote(headerNew, bodyNew, markerLvlNew);
-            helper.close();
+            ContentValues values = new ContentValues();
+            values.put(DBHelper.NoteColumns.HEADER, headerNew);
+            values.put(DBHelper.NoteColumns.BODY, bodyNew);
+            values.put(DBHelper.NoteColumns.MARKER, markerLvlNew);
+            values.put(DBHelper.NoteColumns.ID, idNote);
+            helper.insertNote(values);
         }
     }
 }

@@ -2,6 +2,7 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -42,6 +43,7 @@ public class NoteAdapter extends CursorAdapter {
         private  ImageView edit;
         private  ImageView export;
         private Uri imageUri;
+        private int id;
     }
 
 
@@ -70,15 +72,17 @@ public class NoteAdapter extends CursorAdapter {
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
         final int  marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
 
+        holder.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.ID));
         holder.header.setText(header);
         holder.body.setText(body);
         holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
         holder.export.setOnClickListener(new ExportListener(holder.export, header, body));
-        holder.imageUri = Utils.getImageUri(header);
+        holder.imageUri = Utils.getImageUri(holder.id);
         holder.edit.setOnClickListener(new View.OnClickListener() { // I don't like set listeners here =(
             @Override
             public void onClick(View v) {
-                Dialog dialog = new Dialogs.AddingDialog(ctx, header, body, marker, ((FirstLevelActivity) ctx).helper);
+                ContentValues values = Utils.prepareContentValues(holder.id, header, body, marker);
+                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((FirstLevelActivity) ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();
             }
@@ -86,7 +90,7 @@ public class NoteAdapter extends CursorAdapter {
         ctx.getContentResolver().registerContentObserver(holder.imageUri, false, new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
-                Bitmap bitmap = Utils.getSavedBitmap(header, false);
+                Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
                 if(bitmap != null)
                     holder.photo.setImageBitmap(bitmap);
                 else
@@ -94,8 +98,8 @@ public class NoteAdapter extends CursorAdapter {
                             R.drawable.no_data));
             }
         });
-        holder.photo.setOnClickListener(new LoadImageListener(ctx,header));
-        Bitmap bitmap = Utils.getSavedBitmap(header, false);
+        holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
+        Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if(bitmap != null)
             holder.photo.setImageBitmap(bitmap);
         else
@@ -135,11 +139,11 @@ public class NoteAdapter extends CursorAdapter {
 
     private class LoadImageListener implements View.OnClickListener {
 
-        private String header;
+        private int id;
         private Context ctx;
 
-        public LoadImageListener(Context ctx, String header) {
-            this.header = header;
+        public LoadImageListener(Context ctx, int id) {
+            this.id = id;
             this.ctx = ctx;
         }
 
@@ -147,7 +151,7 @@ public class NoteAdapter extends CursorAdapter {
         public void onClick(View v) {
             // Send action to gallery for choosing image
             Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-            ((FirstLevelActivity)ctx).setHeaderOnImageUpdate(header);
+            ((FirstLevelActivity)ctx).setHeaderOnImageUpdate(id);
             photoPickerIntent.setType("image/*");
             ((Activity)ctx).startActivityForResult(photoPickerIntent, FirstLevelActivity.SELECT_PHOTO);
         }

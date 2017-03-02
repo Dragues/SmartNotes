@@ -3,7 +3,8 @@
     package="com.example.chist.testprojectmosru"
     android:installLocation="preferExternal">
 
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- for picture cache -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />   <!-- for gps tracking -->
 
 
     <application

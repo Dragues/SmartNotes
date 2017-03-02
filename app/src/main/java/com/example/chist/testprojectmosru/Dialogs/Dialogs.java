@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,8 +21,6 @@ import com.example.chist.testprojectmosru.NotesActivityPackage.NoteActivity;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -34,66 +31,55 @@ public class Dialogs {
 
         private Context ctx;
 
-        public AddingDialog(Context ctx, String header, String body, int marker, DBHelper helper) {
+        public AddingDialog(Context ctx, ContentValues values, DBHelper helper) {
             super(ctx, R.style.ContainerDialogTheme);
             this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
-            populate(header, body, marker, helper);
-
-
-            this.setOnDismissListener(new OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-
-                }
-            });
+            populate(values, helper);
         }
 
-        private void populate(final String header, final String body,final int marker, final DBHelper helper) {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
-                final EditText headerView = (EditText) view.findViewById(R.id.header);
-                final EditText bodyView = (EditText) view.findViewById(R.id.body);
-                final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
-                barPriority.setProgress(marker);
-                if (header != null)
-                    headerView.setText(header);
-                if (body != null)
-                    bodyView.setText(body);
+        private void populate(final ContentValues values, final DBHelper helper) {
 
+            View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
+
+            final String header = values == null ? null : values.getAsString(DBHelper.NoteColumns.HEADER);
+            final String body = values == null ? null : values.getAsString(DBHelper.NoteColumns.BODY);
+            final int id = values == null ? -1 : values.getAsInteger(DBHelper.NoteColumns.ID);
+            final int marker = values == null ? 1 : values.getAsInteger(DBHelper.NoteColumns.MARKER); // 1 - medium priority
+
+
+            final EditText headerView = (EditText) view.findViewById(R.id.header);
+            final EditText bodyView = (EditText) view.findViewById(R.id.body);
+            final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
             TextView addButton = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
+
+            barPriority.setProgress(marker);
+            if (header != null)
+                headerView.setText(header);
+            if (body != null)
+                bodyView.setText(body);
+
 
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (headerView.getText().length() != 0 && bodyView.getText().length() != 0) {
-                        if (header != null && body != null && header.equals(headerView.getText().toString())
-                                && body.equals(bodyView.getText().toString()) && marker == barPriority.getProgress()) {
-                            dismiss();
-                            Toast.makeText(ctx, "Already added", Toast.LENGTH_SHORT).show();
-                            return; // the same note
-                        }
-                        // delete old
-                        if (header != null && body != null) {
-                            ContentValues cvOld = new ContentValues();
-                            cvOld.put(DBHelper.NoteColumns.HEADER, header);
-                            cvOld.put(DBHelper.NoteColumns.BODY, body);
-                            helper.deleteNote(cvOld);
-                        }
-                        // add new
-                        ContentValues cv = new ContentValues();
-                        cv.put(DBHelper.NoteColumns.HEADER, headerView.getText().toString());
-                        cv.put(DBHelper.NoteColumns.BODY, bodyView.getText().toString());
-                        cv.put(DBHelper.NoteColumns.MARKER, barPriority.getProgress());
-                        helper.insertNote(cv);
-                        if (header != null)
-                            Utils.renameFiles(header, headerView.getText().toString());
+
+                    ContentValues valuesNew = Utils.prepareContentValues(id, headerView.getText().toString(),
+                            bodyView.getText().toString(), barPriority.getProgress());
+                    if (valuesNew.equals(values)) {
+                        Toast.makeText(ctx, "Already added", Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    if (headerView.getText().toString().length() != 0 &&  bodyView.getText().toString().length() != 0) {
+                        helper.insertNote(valuesNew);
+                    }
+//                        if (header != null)
+//                            Utils.renameFiles(header, headerView.getText().toString());
                     dismiss();
                 }
             });
-
             cancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -152,14 +138,6 @@ public class Dialogs {
             setCancelable(true);
             setCanceledOnTouchOutside(false);
             populate(header, body, marker);
-
-
-            this.setOnDismissListener(new OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialog) {
-
-                }
-            });
         }
 
         private void populate(final String header, final String body, int marker) {
@@ -180,7 +158,7 @@ public class Dialogs {
                 @Override
                 public void onClick(View v) {
                     if (headerView.getText().length() != 0 && bodyView.getText().length() != 0) {
-                        sendSerialPendingRequestByCode(100500,headerView.getText().toString(), bodyView.getText().toString(), barPriority.getProgress());
+                        sendSerialPendingRequestByCode(NoteActivity.requestCodeUpdateData, headerView.getText().toString(), bodyView.getText().toString(), barPriority.getProgress());
                     }
                     dismiss();
                 }
@@ -198,26 +176,21 @@ public class Dialogs {
         private void sendSerialPendingRequestByCode(int requestCode, String headerNew, String bodyNew, int marker) {
             Intent intent = new Intent("PENDING_MODIFY" + "_" + System.currentTimeMillis()); // intents can be cached (it's may occur the errors), name can be anything
             Bundle b = new Bundle();
-            switch(requestCode) {
-                case 100500: // success serial result
+            switch (requestCode) {
+                case NoteActivity.requestCodeUpdateData: // success serial result
                     b.putString(NoteActivity.HEADERTAG, headerNew);
                     b.putString(NoteActivity.BODYTAG, bodyNew);
                     b.putInt(NoteActivity.MARKERTAG, marker);
                     break;
             }
             intent.putExtras(b);
-            PendingIntent pi = ((Activity)ctx).createPendingResult(requestCode, intent, 0);
+            PendingIntent pi = ((Activity) ctx).createPendingResult(requestCode, intent, 0);
             try {
                 pi.send();
+            } catch (Exception e) {
             }
-            catch(Exception e) {}
         }
     }
-
-
-
-
-
 
 
 }

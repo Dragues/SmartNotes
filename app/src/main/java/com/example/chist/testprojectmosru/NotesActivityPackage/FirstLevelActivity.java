@@ -35,15 +35,16 @@ public class FirstLevelActivity extends AppCompatActivity {
     public static String HEADERTAG = "header";
     public static String BODYTAG = "body";
     public static String MARKERTAG = "marker";
+    public static String ID = "id";
 
     public static final int SELECT_PHOTO = 100;
     DBHelper helper;
 
     private ListView view;
-    private String headerOnImageUpdate;
+    private int idNoteOnUpdate = -1;
 
-    public void setHeaderOnImageUpdate(String headerOnImageUpdate) {
-        this.headerOnImageUpdate = headerOnImageUpdate;
+    public void setHeaderOnImageUpdate(int idNoteOnUpdate) {
+        this.idNoteOnUpdate = idNoteOnUpdate;
     }
 
     private NoteAdapter adapter;
@@ -71,6 +72,7 @@ public class FirstLevelActivity extends AppCompatActivity {
                 i.putExtra(HEADERTAG, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
                 i.putExtra(BODYTAG, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
                 i.putExtra(MARKERTAG, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
+                i.putExtra(ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
                 startActivity(i);
             }
         });
@@ -80,6 +82,7 @@ public class FirstLevelActivity extends AppCompatActivity {
                 Cursor c = (Cursor) adapter.getItem(position);
                 helper.deleteNote(c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)),
                         c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
+                Utils.deletesCachedImages(FirstLevelActivity.this, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)) + "");
                 return true;
             }
         });
@@ -107,7 +110,7 @@ public class FirstLevelActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add_note:
-                Dialog addingDialog = new Dialogs.AddingDialog(this, null, null, 1, helper);
+                Dialog addingDialog = new Dialogs.AddingDialog(this, null, helper);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
                 break;
@@ -163,13 +166,13 @@ public class FirstLevelActivity extends AppCompatActivity {
                     try {
                         imageStream = FirstLevelActivity.this.getContentResolver().openInputStream(selectedImage);
                         Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
-                        Utils.saveBitmap(yourSelectedImage, headerOnImageUpdate);
+                        Utils.saveBitmap(yourSelectedImage, String.valueOf(idNoteOnUpdate));
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
-                    if(headerOnImageUpdate != null) {
-                        this.getContentResolver().notifyChange(Utils.getImageUri(headerOnImageUpdate),null);
-                        headerOnImageUpdate = null;
+                    if(idNoteOnUpdate != -1) {
+                        this.getContentResolver().notifyChange(Utils.getImageUri(idNoteOnUpdate),null);
+                        idNoteOnUpdate = -1;
                     }
                 }
         }
