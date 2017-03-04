@@ -29,26 +29,14 @@ import java.util.LinkedList;
 /**
  * Created by 1 on 27.02.2017.
  */
-public class FirstLevelActivity extends AppCompatActivity {
+public class FirstLevelActivity extends BaseNoteActivity {
 
     public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/db/notedata");
-    public static String HEADERTAG = "header";
-    public static String BODYTAG = "body";
-    public static String MARKERTAG = "marker";
-    public static String ID = "id";
-
-    public static final int SELECT_PHOTO = 100;
-    DBHelper helper;
+    public static final int SELECT_PHOTO = 100; // request code for photo
 
     private ListView view;
     private int idNoteOnUpdate = -1;
-
-    public void setHeaderOnImageUpdate(int idNoteOnUpdate) {
-        this.idNoteOnUpdate = idNoteOnUpdate;
-    }
-
     private NoteAdapter adapter;
-    private LinkedList<ContentObserver> observers = new LinkedList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +45,6 @@ public class FirstLevelActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        helper = new DBHelper(this);
         view = (ListView) findViewById(R.id.notelist);
         adapter = new NoteAdapter(this, helper.getNotesCursor(), true);
         view.setAdapter(adapter);
@@ -69,10 +56,7 @@ public class FirstLevelActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor c = (Cursor) adapter.getItem(position);
                 Intent i = new Intent(FirstLevelActivity.this, NoteActivity.class);
-                i.putExtra(HEADERTAG, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
-                i.putExtra(BODYTAG, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
-                i.putExtra(MARKERTAG, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
-                i.putExtra(ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
+                i.putExtra(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
                 startActivity(i);
             }
         });
@@ -86,6 +70,10 @@ public class FirstLevelActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    public void setHeaderOnImageUpdate(int idNoteOnUpdate) {
+        this.idNoteOnUpdate = idNoteOnUpdate;
     }
 
     private void registerContentObservers() {
@@ -132,24 +120,9 @@ public class FirstLevelActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        if (helper.isOpen())
-            helper.close();
-        for (ContentObserver item : observers) {
-            getContentResolver().unregisterContentObserver(item);
-        }
-        observers.clear();
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
-        if (!helper.isOpen()){
-            helper.open();
-            adapter.swapCursor(helper.getNotesCursor()); // We can have modifications after NoteActivity.
-                                                         // ....i can find another way for notify about modifications
-        }
+        adapter.swapCursor(helper.getNotesCursor());
         if(observers.size() == 0)
             registerContentObservers();
     }

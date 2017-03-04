@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Color;
 
+import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 
 import java.io.File;
@@ -41,16 +42,57 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+    public Cursor getNote(int idNote) {
+        String selector = NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(idNote+"");
+        Cursor c;
+        try {
+            c = query(selector, Order.ID);
+            c.moveToFirst();
+            return c;
+        } catch (Exception e) {
+        }
+        return null;
+    }
+
+    public Cursor query(String selection, Order order) {
+        String orderBy = null;
+        if (order != null)
+            switch (order) {
+                case ALPHABETHEADER:
+                    orderBy = NoteColumns.HEADER + " COLLATE NOCASE ASC";
+                    break;
+                case ID:
+                    orderBy = NoteColumns.ID + " ASC";
+                    break;
+            }
+
+        Cursor c = db.query(tableNotesName, null, selection, null, null, null, orderBy);
+        return c;
+    }
+
+    // get base columns from cursor
+    public ContentValues getContentValuesFromCursor(Cursor c) {
+        ContentValues cv = new ContentValues();
+        cv.put(NoteColumns.HEADER, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
+        cv.put(NoteColumns.BODY, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
+        cv.put(NoteColumns.MARKER, c.getInt(c.getColumnIndex(NoteColumns.MARKER)));
+        cv.put(NoteColumns.TIME, System.currentTimeMillis());
+        return cv;
+    }
+
     public interface NoteColumns {
         String ID = "_id";
         String HEADER = "headerNote";
         String BODY = "textNote";
         String MARKER = "marker";
+        String MAPX = "mapx";
+        String MAPY = "mapy";
+        String TIME = "time";
     }
 
     public enum Order {
         ALPHABETHEADER,
-        PRIORITY
+        ID
     }
 
     public DBHelper(Context context) {
@@ -66,6 +108,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 + NoteColumns.ID + " integer primary key autoincrement," // noteId
                 + NoteColumns.HEADER + " text not null unique," // title
                 + NoteColumns.BODY + " text," // body
+                + NoteColumns.MAPX + " TEXT, "
+                + NoteColumns.MAPY + " TEXT, "
+                + NoteColumns.TIME + " INTEGER, "
                 + NoteColumns.MARKER + " integer" + ");"); // priority
     }
 
@@ -78,15 +123,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     }
 
-    public void insertNote(String header, String body, int marker) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.NoteColumns.HEADER,header);
-        cv.put(DBHelper.NoteColumns.BODY, body);
-        cv.put(DBHelper.NoteColumns.MARKER, marker);
-        insertNote(cv);
-    }
-
     public void insertNote(ContentValues cv) {
+        cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
+        if(System.currentTimeMillis() - LaunchApplication.getInstance().getLasttimeUpdate() < LaunchApplication.validDeltaTime) {
+            if(!cv.containsKey(NoteColumns.MAPX))
+                cv.put(NoteColumns.MAPX, LaunchApplication.getInstance().getLastX());
+            if(!cv.containsKey(NoteColumns.MAPY))
+                cv.put(NoteColumns.MAPY, LaunchApplication.getInstance().getLastY());
+        }
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
     }
@@ -119,6 +163,8 @@ public class DBHelper extends SQLiteOpenHelper {
 //      }
         return c;
     }
+
+
 
 
 }

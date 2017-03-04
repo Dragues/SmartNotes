@@ -75,8 +75,6 @@ public class Dialogs {
                     if (headerView.getText().toString().length() != 0 &&  bodyView.getText().toString().length() != 0) {
                         helper.insertNote(valuesNew);
                     }
-//                        if (header != null)
-//                            Utils.renameFiles(header, headerView.getText().toString());
                     dismiss();
                 }
             });
@@ -174,7 +172,7 @@ public class Dialogs {
         }
 
         private void sendSerialPendingRequestByCode(int requestCode, String headerNew, String bodyNew, int marker) {
-            Intent intent = new Intent("PENDING_MODIFY" + "_" + System.currentTimeMillis()); // intents can be cached (it's may occur the errors), name can be anything
+            Intent intent = new Intent("ANYTHINGTITLE" + "_" + System.currentTimeMillis()); // intents can be cached (it's may occur the errors), name can be anything
             Bundle b = new Bundle();
             switch (requestCode) {
                 case NoteActivity.requestCodeUpdateData: // success serial result

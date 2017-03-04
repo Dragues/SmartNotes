@@ -12,7 +12,6 @@ import android.widget.Toast;
 import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
 import com.example.chist.testprojectmosru.R;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,7 +19,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 /**
  * Created by 1 on 28.02.2017.
@@ -60,7 +58,6 @@ public class Utils {
     }
 
     public static boolean deleteFileFromSd(Context ctx, String filename){
-
         File notePath = getNotePathInDevice();
         if(!notePath.exists())
             return false;
@@ -76,6 +73,7 @@ public class Utils {
         }
     }
 
+    // delete saved images from memory
     public static void deletesCachedImages(Context ctx, String filename){
 
         File notePathLarge = getImagePathInDevice(true);
@@ -84,8 +82,9 @@ public class Utils {
         File sdFileLarge = new File(notePathLarge, filename);
         File sdFileSmall = new File(notePathSmall, filename);
 
+        // need call it subsequently
         boolean a = sdFileLarge.delete();
-        boolean b = sdFileSmall.delete(); // need call it subsequently
+        boolean b = sdFileSmall.delete();
         if (a || b)
             Toast.makeText(ctx, "Related cached files was deleted " + filename, Toast.LENGTH_LONG).show();
 
@@ -125,27 +124,15 @@ public class Utils {
     }
 
     public static File getNotePathInDevice() {
-        // Path to SD
-        File sdPath = getSdPath();
-        // Creating Own catalog
-        sdPath = new File(sdPath.getAbsolutePath() + "/" + notesDir);
-        return sdPath;
+        return new File(getSdPath().getAbsolutePath() + "/" + notesDir);
     }
 
     public static File getImagePathInDevice() {
-        // Path to SD
-        File sdPath = getSdPath();
-        // Creating Own catalog
-        sdPath = new File(sdPath.getAbsolutePath() + "/" + imagesDir);
-        return sdPath;
+        return new File(getSdPath().getAbsolutePath() + "/" + imagesDir);
     }
 
     public static File getImagePathInDevice(boolean large) {
-        // Path to SD
-        File sdPath = getSdPath();
-        // Creating Own catalog
-        sdPath = new File(sdPath.getAbsolutePath() + "/" + imagesDir + "/" + (large ? imagesLarge : imagesSmall));
-        return sdPath;
+        return  new File(getSdPath().getAbsolutePath() + "/" + imagesDir + "/" + (large ? imagesLarge : imagesSmall));
     }
 
     public static File getSdPath() {
@@ -186,6 +173,7 @@ public class Utils {
         }
     }
 
+    // get seved cache notes images
     public static Bitmap getSavedBitmap(int id, boolean large) {
         Bitmap bitmap=null;
         File f = new File(Utils.getImagePathInDevice(large).getAbsolutePath() + "/"+id);
@@ -201,6 +189,7 @@ public class Utils {
         return bitmap;
     }
 
+    // Prepare Base Columns
     public static ContentValues prepareContentValues(int id, String header, String body, int marker) {
         ContentValues values = new ContentValues();
         if(id != -1)
@@ -213,6 +202,8 @@ public class Utils {
         return values;
     }
 
+    // Firstly i use the id-field for identify note from sqlite. It wasn't good idea.
+    // Method can be useful =)
     public static void renameFiles(String oldName, String newName) {
         File fLargeOld = new File(getImagePathInDevice(true),oldName);
         File fLargeNew = new File(getImagePathInDevice(true),newName);
@@ -226,10 +217,18 @@ public class Utils {
         return from.getParentFile().exists() && from.exists() && from.renameTo(to);
     }
 
-
+    // delete directory and all files into it.
     public static void deleteAllFilesInDir(File fileOrDirectory) {
         if (fileOrDirectory.isDirectory())
             for (File child : fileOrDirectory.listFiles())
                 child.delete();
+    }
+
+    public static Uri getGeoDataUriAdapter() {
+        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/geo/adapter");
+    }
+
+    public static Uri getGeoDataUri() {
+        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/geo");
     }
 }

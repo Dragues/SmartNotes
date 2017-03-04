@@ -2,6 +2,7 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -32,6 +33,7 @@ import java.io.FileNotFoundException;
 /**
  * Created by 1 on 27.02.2017.
  */
+// In this task i want to use CursorAdapter
 public class NoteAdapter extends CursorAdapter {
 
     private Context ctx;
@@ -44,6 +46,7 @@ public class NoteAdapter extends CursorAdapter {
         private  ImageView export;
         private Uri imageUri;
         private int id;
+        private TextView coords;
     }
 
 
@@ -61,6 +64,7 @@ public class NoteAdapter extends CursorAdapter {
         holder.edit = (ImageView) view.findViewById(R.id.edit);
         holder.export = (ImageView) view.findViewById(R.id.export);
         holder.photo = (ImageView) view.findViewById(R.id.photo);
+        holder.coords = (TextView) view.findViewById(R.id.coords);
         view.setTag(holder);
         return view;
     }
@@ -71,14 +75,16 @@ public class NoteAdapter extends CursorAdapter {
         final String header = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.HEADER));
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
         final int  marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
+        final double  X = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPX));
+        final double  Y = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPY));
+        final long  time = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.TIME));
 
         holder.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.ID));
         holder.header.setText(header);
         holder.body.setText(body);
         holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
-        holder.export.setOnClickListener(new ExportListener(holder.export, header, body));
-        holder.imageUri = Utils.getImageUri(holder.id);
-        holder.edit.setOnClickListener(new View.OnClickListener() { // I don't like set listeners here =(
+        holder.export.setOnClickListener(new ExportListener(holder.export, String.valueOf(holder.id), "HEADER: " + header + " BODY: " + body));
+        holder.edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ContentValues values = Utils.prepareContentValues(holder.id, header, body, marker);
@@ -87,17 +93,9 @@ public class NoteAdapter extends CursorAdapter {
                 dialog.show();
             }
         });
-        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, new ContentObserver(new Handler()) {
-            @Override
-            public void onChange(boolean selfChange) {
-                Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
-                if(bitmap != null)
-                    holder.photo.setImageBitmap(bitmap);
-                else
-                    holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
-                            R.drawable.no_data));
-            }
-        });
+
+        // IMAGE (обновляем сколько угодно раз, оставляю наблюдатель пока жив адаптер)
+        holder.imageUri = Utils.getImageUri(holder.id);
         holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if(bitmap != null)
@@ -105,35 +103,63 @@ public class NoteAdapter extends CursorAdapter {
         else
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                     R.drawable.no_data));
+        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
+                if (bitmap != null)
+                    holder.photo.setImageBitmap(bitmap);
+                else
+                    holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
+                            R.drawable.no_data));
+            }
+        });
+
+        // GPS
+        if (X != 0 && Y != 0)
+            holder.coords.setText("X: " + X + "\n" + "Y: "  + Y);
+        else {
+            final ContentObserver gpsObserver = new ContentObserver(new Handler()) {
+                @Override
+                public void onChange(boolean selfChange) {
+                    if ((X == 0 || Y == 0) && System.currentTimeMillis() - time < LaunchApplication.validDeltaTime) {
+                        ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(),null);
+                        holder.coords.setText("X: " + LaunchApplication.getInstance().getLastX() + "\n" +
+                                "Y: " + LaunchApplication.getInstance().getLastY());
+                        ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
+                    }
+
+                }
+            };
+            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
+            ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(), false, gpsObserver);
+        }
 
         view.setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
         view.setTag(holder);
     }
 
-
-
-
     private class ExportListener implements View.OnClickListener {
 
-        private String header;
-        private String body;
+        private String id;
+        private String bodyHeader;
         private ImageView exportView;
 
-        public ExportListener(ImageView export, String header, String body) {
-            this.header = header;
-            this.body = body;
+        public ExportListener(ImageView export, String id, String bodyHeader) {
+            this.id = id;
+            this.bodyHeader = bodyHeader;
             this.exportView = export;
         }
 
         @Override
         public void onClick(View v) {
-            if(!Utils.containsFile(header))
-                Utils.exportToFile(ctx, header, body);
+            if(!Utils.containsFile(id))
+                Utils.exportToFile(ctx, id, bodyHeader);
             else
-                Utils.deleteFileFromSd(ctx, header);
+                Utils.deleteFileFromSd(ctx, id);
             // Export or delele can be process with errors, so i prefer check it there.
             exportView.setBackground(ctx.getResources().getDrawable(
-                    Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
+                    Utils.containsFile(id) ? R.drawable.exported : R.drawable.non_exported));
         }
     }
 

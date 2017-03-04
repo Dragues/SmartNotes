@@ -8,4 +8,9 @@
     <string name="yes">Да</string>
     <string name="no">Нет</string>
 
+    <string name="test">Тест</string>
+    <string name="save">Save</string>
+    <string name="curplace">We are here</string>
+    <string name="no_data">No gps data</string>
+
 </resources>
