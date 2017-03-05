@@ -79,6 +79,15 @@ public class FirstLevelActivity extends BaseNoteActivity {
                 return true;
             }
         });
+
+        findViewById(R.id.addnote).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Dialog addingDialog = new Dialogs.AddingDialog(FirstLevelActivity.this, null, helper);
+                addingDialog.setCancelable(true);
+                addingDialog.show();
+            }
+        });
     }
 
     public void setHeaderOnImageUpdate(int idNoteOnUpdate) {

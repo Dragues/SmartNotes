@@ -47,6 +47,8 @@ public class Dialogs {
             TextView addButton = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
 
+            ((TextView)view.findViewById(R.id.dialogheader)).setText(ctx.getResources().getString(R.string.new_note));
+
             if (values != null) {
                 if(values.containsKey(DBHelper.NoteColumns.MARKER))
                     barPriority.setProgress(values.getAsInteger(DBHelper.NoteColumns.MARKER));
@@ -153,6 +155,7 @@ public class Dialogs {
 
             TextView modify = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
+            ((TextView)view.findViewById(R.id.dialogheader)).setText(ctx.getResources().getString(R.string.edit_note));
 
             modify.setOnClickListener(new View.OnClickListener() {
                 @Override

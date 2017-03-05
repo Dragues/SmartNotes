@@ -119,14 +119,15 @@ public class NoteActivity extends BaseNoteActivity {
         photo = (ImageView) findViewById(R.id.notephoto);
         gps = (TextView) findViewById(R.id.gps);
         changeLocation = (Button)findViewById(R.id.changelocation);
+        changeLocation = (Button)findViewById(R.id.changelocation);
 
         changeLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NoteActivity.this, MapChangerActivity.class);
                 i.putExtra(DBHelper.NoteColumns.ID, idNote);
-                i.putExtra(DBHelper.NoteColumns.MAPX, noteNew.x);
-                i.putExtra(DBHelper.NoteColumns.MAPY, noteNew.y);
+                i.putExtra(DBHelper.NoteColumns.MAPX, noteNew.x == 0 ? 55.751244 : noteNew.x); // set default Moskow
+                i.putExtra(DBHelper.NoteColumns.MAPY, noteNew.y  == 0 ? 37.618423 : noteNew.y);
                 startActivity(i);
             }
         });
