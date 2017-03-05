@@ -2,6 +2,7 @@ package com.example.chist.testprojectmosru.Application;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -10,7 +11,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
+import com.example.chist.testprojectmosru.NotesActivityPackage.Note;
 import com.example.chist.testprojectmosru.R;
+import com.vk.sdk.VKAccessToken;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -32,7 +35,7 @@ public class Utils {
     public static String exportTag = "DATAEXPORT";
 
     public static int getBackGroundColorFromMarker(Context ctx, int marker) {
-        switch(marker){
+        switch (marker) {
             case 0:
                 return ctx.getResources().getColor(R.color.greenalpha);
             case 1:
@@ -51,30 +54,28 @@ public class Utils {
             Log.d(exportTag, "SD-карта не доступна: " + Environment.getExternalStorageState());
             Toast.makeText(ctx, "SD-карта не доступна", Toast.LENGTH_LONG).show();
             return false;
-        }
-        else {
+        } else {
             return writeFileSD(ctx, filename, content);
         }
     }
 
-    public static boolean deleteFileFromSd(Context ctx, String filename){
+    public static boolean deleteFileFromSd(Context ctx, String filename) {
         File notePath = getNotePathInDevice();
-        if(!notePath.exists())
+        if (!notePath.exists())
             return false;
 
         File sdFile = new File(notePath, filename);
-        if (sdFile.delete()){
+        if (sdFile.delete()) {
             Toast.makeText(ctx, "Deleting successfull, filename " + filename, Toast.LENGTH_LONG).show();
             return true;
-        }
-        else {
+        } else {
             Toast.makeText(ctx, "Deleting is not successfull, filename " + filename, Toast.LENGTH_LONG).show();
             return false;
         }
     }
 
     // delete saved images from memory
-    public static void deletesCachedImages(Context ctx, String filename){
+    public static void deletesCachedImages(Context ctx, String filename) {
 
         File notePathLarge = getImagePathInDevice(true);
         File notePathSmall = getImagePathInDevice(false);
@@ -92,7 +93,7 @@ public class Utils {
 
     public static boolean writeFileSD(Context ctx, String filename, String content) {
         File notePath = getNotePathInDevice();
-        if(!notePath.exists())
+        if (!notePath.exists())
             notePath.mkdirs();
 
         File sdFile = new File(notePath, filename);
@@ -112,7 +113,7 @@ public class Utils {
 
     public static boolean containsFile(String header) {
         File notePath = getNotePathInDevice();
-        if(!notePath.exists())
+        if (!notePath.exists())
             return false;
         else {
             for (File f : notePath.listFiles()) {
@@ -132,11 +133,11 @@ public class Utils {
     }
 
     public static File getImagePathInDevice(boolean large) {
-        return  new File(getSdPath().getAbsolutePath() + "/" + imagesDir + "/" + (large ? imagesLarge : imagesSmall));
+        return new File(getSdPath().getAbsolutePath() + "/" + imagesDir + "/" + (large ? imagesLarge : imagesSmall));
     }
 
     public static File getSdPath() {
-       return Environment.getExternalStorageDirectory();
+        return Environment.getExternalStorageDirectory();
     }
 
     public static Uri getImageUri(int id) {
@@ -145,13 +146,13 @@ public class Utils {
 
     public static void saveBitmap(Bitmap yourSelectedImage, String header) {
         File globalImagePath = getImagePathInDevice();
-        if(!globalImagePath.exists())
+        if (!globalImagePath.exists())
             globalImagePath.mkdirs();
         File smallImagePath = getImagePathInDevice(false);
-        if(!smallImagePath.exists())
+        if (!smallImagePath.exists())
             smallImagePath.mkdirs();
         File largeImagePath = getImagePathInDevice(true);
-        if(!largeImagePath.exists())
+        if (!largeImagePath.exists())
             largeImagePath.mkdirs();
 
         saveFileInDirectory(largeImagePath, header, yourSelectedImage, false);
@@ -159,8 +160,8 @@ public class Utils {
     }
 
     private static void saveFileInDirectory(File smallImagePath, String header, Bitmap bitmap, Boolean needCrop) {
-        File file = new File (smallImagePath, header);
-        if (file.exists ()) file.delete();
+        File file = new File(smallImagePath, header);
+        if (file.exists()) file.delete();
         try {
             Bitmap resizeBitMap = needCrop ? Bitmap.createScaledBitmap(bitmap, 120, 120, false) : bitmap;
             FileOutputStream out = new FileOutputStream(file);
@@ -175,8 +176,8 @@ public class Utils {
 
     // get seved cache notes images
     public static Bitmap getSavedBitmap(int id, boolean large) {
-        Bitmap bitmap=null;
-        File f = new File(Utils.getImagePathInDevice(large).getAbsolutePath() + "/"+id);
+        Bitmap bitmap = null;
+        File f = new File(Utils.getImagePathInDevice(large).getAbsolutePath() + "/" + id);
         if (!f.exists())
             return null;
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -192,12 +193,12 @@ public class Utils {
     // Prepare Base Columns
     public static ContentValues prepareContentValues(int id, String header, String body, int marker) {
         ContentValues values = new ContentValues();
-        if(id != -1)
+        if (id != -1)
             values.put(DBHelper.NoteColumns.ID, id);
         if (header != null)
-        values.put(DBHelper.NoteColumns.HEADER, header);
+            values.put(DBHelper.NoteColumns.HEADER, header);
         if (body != null)
-        values.put(DBHelper.NoteColumns.BODY, body);
+            values.put(DBHelper.NoteColumns.BODY, body);
         values.put(DBHelper.NoteColumns.MARKER, marker);
         return values;
     }
@@ -205,11 +206,11 @@ public class Utils {
     // Firstly i use the id-field for identify note from sqlite. It wasn't good idea.
     // Method can be useful =)
     public static void renameFiles(String oldName, String newName) {
-        File fLargeOld = new File(getImagePathInDevice(true),oldName);
-        File fLargeNew = new File(getImagePathInDevice(true),newName);
+        File fLargeOld = new File(getImagePathInDevice(true), oldName);
+        File fLargeNew = new File(getImagePathInDevice(true), newName);
         rename(fLargeOld, fLargeNew);
-        File fSmallOld = new File(getImagePathInDevice(false),oldName);
-        File fSmallNew = new File(getImagePathInDevice(false),newName);
+        File fSmallOld = new File(getImagePathInDevice(false), oldName);
+        File fSmallNew = new File(getImagePathInDevice(false), newName);
         rename(fSmallOld, fSmallNew);
     }
 
@@ -230,5 +231,34 @@ public class Utils {
 
     public static Uri getGeoDataUri() {
         return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/geo");
+    }
+
+    public static ContentValues prepareContentValues(Note noteNew) {
+        ContentValues values = new ContentValues();
+        values.put(DBHelper.NoteColumns.ID, noteNew.id);
+        values.put(DBHelper.NoteColumns.HEADER, noteNew.header);
+        values.put(DBHelper.NoteColumns.MARKER, noteNew.marker);
+        values.put(DBHelper.NoteColumns.BODY, noteNew.body);
+        values.put(DBHelper.NoteColumns.MAPX, noteNew.x);
+        values.put(DBHelper.NoteColumns.MAPY, noteNew.y);
+        return values;
+    }
+
+    // get values from cursor
+    public static ContentValues getContentValuesFromCursor(Cursor c) {
+        ContentValues cv = new ContentValues();
+        cv.put(DBHelper.NoteColumns.HEADER, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
+        cv.put(DBHelper.NoteColumns.BODY, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
+        cv.put(DBHelper.NoteColumns.MARKER, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
+        cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
+        cv.put(DBHelper.NoteColumns.MAPX, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)));
+        cv.put(DBHelper.NoteColumns.MAPY,  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)));
+        cv.put(DBHelper.NoteColumns.ID,  c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
+        return cv;
+    }
+
+    public static int getID () {
+        final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
+        return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
     }
 }

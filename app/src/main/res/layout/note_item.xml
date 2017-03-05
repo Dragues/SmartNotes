@@ -96,37 +96,7 @@
             android:layout_weight="1">
         </TextView>
 
-        <ImageView
-            android:id="@+id/vk"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:background="@drawable/vk"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"/>
 
-        <ImageView
-            android:id="@+id/facebook"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:background="@drawable/facebook"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/inst"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:background="@drawable/inst"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"/>
-
-        <ImageView
-            android:id="@+id/twitter"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:background="@drawable/twitter"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"/>
 
         </LinearLayout>
 

@@ -16,11 +16,18 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+
+import com.facebook.FacebookSdk;
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKCallback;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.VKError;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -41,6 +48,8 @@ public class FirstLevelActivity extends BaseNoteActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!FacebookSdk.isInitialized())
+            FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.firstlvllayout);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -91,6 +100,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.notemenu, menu);
         getMenuInflater().inflate(R.menu.clear, menu);
+        getMenuInflater().inflate(R.menu.show_all_notices, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -112,6 +122,11 @@ public class FirstLevelActivity extends BaseNoteActivity {
                 dialogConfirm.setCancelable(true);
                 dialogConfirm.show();
                 break;
+            case R.id.show_all:
+                Intent i = new Intent(FirstLevelActivity.this, MapChangerActivity.class);
+                i.putExtra(MapChangerActivity.LAUNCHMODETAG, true);
+                startActivity(i);
+                break;
             case android.R.id.home:
                 finish();
                 break;
@@ -128,13 +143,13 @@ public class FirstLevelActivity extends BaseNoteActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
-        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
 
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
-                    Uri selectedImage = imageReturnedIntent.getData();
+                    Uri selectedImage = intent.getData();
                     InputStream imageStream = null;
                     try {
                         imageStream = FirstLevelActivity.this.getContentResolver().openInputStream(selectedImage);
@@ -147,8 +162,30 @@ public class FirstLevelActivity extends BaseNoteActivity {
                         this.getContentResolver().notifyChange(Utils.getImageUri(idNoteOnUpdate),null);
                         idNoteOnUpdate = -1;
                     }
+                    return;
                 }
         }
+
+        if (!VKSdk.onActivityResult(requestCode, resultCode, intent, new VKCallback<VKAccessToken>() {
+            @Override
+            public void onResult(VKAccessToken res) {
+                Toast.makeText(FirstLevelActivity.this,"INVK", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onError(VKError error) {
+                Toast.makeText(FirstLevelActivity.this,"INVK", Toast.LENGTH_LONG).show();
+                // Произошла ошибка авторизации (например, пользователь запретил авторизацию)
+            }
+        })) {
+            super.onActivityResult(requestCode, resultCode, intent);
+        }
+    }
+
+
+    int getMyId() {
+        final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
+        return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
     }
 
 }

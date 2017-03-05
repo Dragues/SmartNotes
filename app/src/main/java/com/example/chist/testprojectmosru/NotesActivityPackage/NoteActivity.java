@@ -10,21 +10,43 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,28 +55,36 @@ import java.util.Map;
  */
 public class NoteActivity extends BaseNoteActivity {
 
+
+    private static final String AUTHURL = "https://api.instagram.com/oauth/authorize/";
+    //Used for Authentication.
+    private static final String TOKENURL ="https://api.instagram.com/oauth/access_token/";
+    //Used for getting token and User details.
+    public static final String APIURL = "https://api.instagram.com/v1/";
+    //Used to specify the API version which we are going to use.
+    public static String CALLBACKURL = "Your Redirect URI";
+    //The callback url that we have used while registering the application.
+
     public static String HEADERTAG = "RESULT_HEADER";
     public static String BODYTAG = "RESULT_BODY";
     public static String MARKERTAG = "RESULT_MARKER";
     public static final int requestCodeUpdateData = 100500;
     public static final int requestCodeUpdateGPS = 100501;
 
-    // need optimize logic
-    private String headerOld;
-    private String bodyOld;
-    private String headerNew;
-    private String bodyNew;
-    private int markerLvlOld;
-    private int markerLvlNew;
     private HashMap<Integer, Intent> mapPendings = new HashMap<>(); // pendings for update anything
     private TextView header, body, gps;
     private ImageView photo;
     private int idNote;
-    private Point pointOld = new Point(0,0);
-    private Point pointNew = new Point(0,0);
-    private boolean needUpdateGps = false;
-    private long timeAdded;
     private Button changeLocation;
+
+    private Note noteOld;
+    private Note noteNew;
+    private ImageView facebook;
+    private ImageView vk;
+    public CallbackManager manager;
+
+    private long idFacebookUser;
+    private String nameUser;
 
     class Point {
         public double x;
@@ -66,6 +96,8 @@ public class NoteActivity extends BaseNoteActivity {
         }
     }
 
+    private static String[] sMyScope = new String[]{VKScope.FRIENDS, VKScope.WALL, VKScope.PHOTOS, VKScope.NOHTTPS};
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,42 +105,41 @@ public class NoteActivity extends BaseNoteActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle(getString(R.string.viewer_note));
+        manager = CallbackManager.Factory.create();
 
         Bundle bundle = getIntent().getExtras();
         idNote = bundle.getInt(DBHelper.NoteColumns.ID);
+
         Cursor c = helper.getNote(idNote);
-        headerOld = headerNew = c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER));
-        bodyOld = bodyNew = c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY));
-        markerLvlOld = markerLvlNew = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER));
-        pointOld.x = pointNew.x =  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX));
-        pointOld.y = pointNew.y =  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY));
-        timeAdded = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.TIME));
+        noteOld = new Note(c);
+        noteNew = (Note)noteOld.clone();
 
         header = (TextView) findViewById(R.id.header);
         body = (TextView) findViewById(R.id.body);
         photo = (ImageView) findViewById(R.id.notephoto);
         gps = (TextView) findViewById(R.id.gps);
         changeLocation = (Button)findViewById(R.id.changelocation);
+
         changeLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NoteActivity.this, MapChangerActivity.class);
                 i.putExtra(DBHelper.NoteColumns.ID, idNote);
-                i.putExtra(DBHelper.NoteColumns.MAPX, pointNew.x);
-                i.putExtra(DBHelper.NoteColumns.MAPY, pointNew.y);
+                i.putExtra(DBHelper.NoteColumns.MAPX, noteNew.x);
+                i.putExtra(DBHelper.NoteColumns.MAPY, noteNew.y);
                 startActivity(i);
             }
         });
 
-        if(pointNew.x != 0 || pointNew.y != 0)
-            gps.setText("X: " + pointNew.x + "\n" + "Y: "  + pointNew.y);
+        if(noteNew.x != 0 || noteNew.y != 0)
+            gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
         else
            gps.setText("GPS NO DATA");
 
-        header.setText(headerNew);
-        body.setText(bodyNew);
+        header.setText(noteNew.header);
+        body.setText(noteNew.body);
 
-        updateBackground(this, markerLvlNew);
+        updateBackground(this, noteNew.marker);
         Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
         if (bitmap != null)
             photo.setImageBitmap(bitmap);
@@ -123,15 +154,15 @@ public class NoteActivity extends BaseNoteActivity {
         });
 
 
-        if(pointNew.x == 0 && pointNew.y == 0) {
+        if(noteNew.x == 0 && noteNew.y == 0) {
             final ContentObserver observer = new ContentObserver(new Handler()) {
                 @Override
                 public void onChange(boolean selfChange) {
                     // Если данные свежие то добавляю последние с GPS
-                    if (Math.abs(timeAdded - LaunchApplication.getInstance().getLasttimeUpdate()) < LaunchApplication.getInstance().validDeltaTime) {
-                        pointNew = pointOld = new Point(LaunchApplication.getInstance().getLastX(), LaunchApplication.getInstance().getLastY());
-                        gps.setText("X: " + pointNew.x + "\n" + "Y: "  + pointNew.y);
-                        needUpdateGps = true;
+                    if (Math.abs(noteNew.timestamp - LaunchApplication.getInstance().getLasttimeUpdate()) < LaunchApplication.getInstance().validDeltaTime) {
+                        noteNew.x = noteOld.x = LaunchApplication.getInstance().getLastX();
+                        noteNew.y = noteOld.y = LaunchApplication.getInstance().getLastY();
+                        gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
                         getContentResolver().unregisterContentObserver(this);
                     }
 
@@ -139,6 +170,34 @@ public class NoteActivity extends BaseNoteActivity {
             };
             observers.add(observer);
         }
+
+
+        facebook = (ImageView)findViewById(R.id.facebook);
+        facebook.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (idFacebookUser != 0)
+                    onFblogin();
+                else {
+                    Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
+                    SocialUtils.shareWithFaceBookDialog(NoteActivity.this, bitmap, noteNew);
+                }
+
+            }
+        });
+        vk = (ImageView)findViewById(R.id.vk);
+        vk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (Utils.getID() == 0)
+                    VKSdk.login(NoteActivity.this, sMyScope);
+                else {
+                    final Bitmap photo = Utils.getSavedBitmap(idNote, true);
+                    SocialUtils.shareWithDialog(NoteActivity.this, photo, noteNew, getSupportFragmentManager());
+                }
+            }
+        });
+
     }
 
     private void updateBackground(Context ctx, int markerLvl) {
@@ -157,22 +216,22 @@ public class NoteActivity extends BaseNoteActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.edit:
-                Dialog modifyDialog = new Dialogs.ModifyDialog(this, headerNew, bodyNew, markerLvlNew);
+                Dialog modifyDialog = new Dialogs.ModifyDialog(this, noteNew.header, noteNew.body, noteNew.marker);
                 modifyDialog.setCancelable(true);
                 modifyDialog.show();
                 break;
             case R.id.revert:
-                header.setText(headerOld);
-                body.setText(bodyOld);
-                headerNew = headerOld;
-                bodyNew = bodyOld;
-                pointNew.x = pointOld.x;
-                pointNew.y = pointOld.y;
-                gps.setText("X: " + pointNew.x + "\n" + "Y: " + pointNew.y);
+                header.setText(noteOld.header);
+                body.setText(noteOld.body);
+                noteNew.header = noteOld.header;
+                noteNew.body = noteOld.body;
+                noteNew.x = noteOld.x;
+                noteNew.y = noteOld.y;
+                gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                 break;
             case R.id.deletenotes:
                 DBHelper helper = new DBHelper(this);
-                helper.deleteNote(headerNew, bodyNew);
+                helper.deleteNote(String.valueOf(noteOld.id));
                 helper.close();
                 finish();
                 break;
@@ -186,6 +245,7 @@ public class NoteActivity extends BaseNoteActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        manager.onActivityResult(requestCode, resultCode, data);
         mapPendings.put(requestCode, data);
     }
 
@@ -201,21 +261,20 @@ public class NoteActivity extends BaseNoteActivity {
     private void processPendingIntent(Map.Entry<Integer, Intent> entry) {
         switch (entry.getKey()) {
             case requestCodeUpdateData: // update data after modify
-                headerNew = entry.getValue().getStringExtra(HEADERTAG);
-                bodyNew = entry.getValue().getStringExtra(BODYTAG);
-                markerLvlNew = entry.getValue().getIntExtra(MARKERTAG, 0);
-                header.setText(headerNew);
-                body.setText(bodyNew);
-                updateBackground(this, markerLvlNew);
+                noteNew.header = entry.getValue().getStringExtra(HEADERTAG);
+                noteNew.body = entry.getValue().getStringExtra(BODYTAG);
+                noteNew.marker = entry.getValue().getIntExtra(MARKERTAG, 0);
+                header.setText(noteNew.header);
+                body.setText(noteNew.body);
+                updateBackground(this,  noteNew.marker);
                 break;
             case requestCodeUpdateGPS: // update data after modify
-                double x = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPX, pointNew.x);
-                double y = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPY, pointNew.y);
-                if (x != pointNew.x || y != pointNew.y) {
-                    pointNew.x = x;
-                    pointNew.y = y;
-                    needUpdateGps = true;
-                    gps.setText("X: " + pointNew.x + "\n" + "Y: " + pointNew.y);
+                double x = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPX, noteNew.x);
+                double y = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPY, noteNew.y);
+                if (x != noteNew.x || y != noteNew.y) {
+                    noteNew.x = x;
+                    noteNew.y = y;
+                    gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                     break;
                 }
         }
@@ -229,12 +288,12 @@ public class NoteActivity extends BaseNoteActivity {
 
     @Override
     protected void onStop() {
-        if (!bodyOld.equals(bodyNew) || !headerOld.equals(headerNew) || markerLvlNew != markerLvlOld || needUpdateGps) {
-            ContentValues values = Utils.prepareContentValues(idNote, headerNew, bodyNew, markerLvlNew);
-            if(pointNew.x != 0)
-                values.put(DBHelper.NoteColumns.MAPX, pointNew.x);
-            if(pointNew.y != 0)
-                values.put(DBHelper.NoteColumns.MAPY, pointNew.y);
+        if (!noteOld.equals(noteNew)) { // equals is overrided
+            ContentValues values = Utils.prepareContentValues(noteNew);
+            if(noteNew.x != 0)
+                values.put(DBHelper.NoteColumns.MAPX, noteNew.x);
+            if(noteNew.y != 0)
+                values.put(DBHelper.NoteColumns.MAPY, noteNew.y);
             helper.insertNote(values);
         }
         super.onStop();
@@ -244,11 +303,76 @@ public class NoteActivity extends BaseNoteActivity {
     protected void onStart() {
         super.onStart();
         if (LaunchApplication.getInstance().onGPSUpdate != null) {
-            pointNew.x = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[0]);
-            pointNew.y = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[1]);
-            gps.setText("X: " + pointNew.x + "\n" + "Y: " + pointNew.y);
-            needUpdateGps = true;
+            noteNew.x = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[0]);
+            noteNew.y = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[1]);
+            gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
             LaunchApplication.getInstance().onGPSUpdate = null;
         }
     }
+
+
+
+
+
+
+
+    /*
+       SOCIAL NETWORKS METHODS
+    */
+
+    // Private method to handle Facebook login and callback
+    private void onFblogin()
+    {
+        manager = CallbackManager.Factory.create();
+
+        // Set permissions
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("email", "user_photos", "public_profile"));
+
+        LoginManager.getInstance().registerCallback(manager,
+                new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+
+                        Toast.makeText(NoteActivity.this, "Success login to facebook", Toast.LENGTH_LONG).show();
+                        GraphRequest.newMeRequest(
+                                loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                                    @Override
+                                    public void onCompleted(JSONObject json, GraphResponse response) {
+                                        if (response.getError() != null) {
+                                            // handle error
+                                            System.out.println("ERROR");
+                                        } else {
+                                            System.out.println("Success");
+                                            try {
+
+                                                String jsonresult = String.valueOf(json);
+                                                System.out.println("JSON Result" + jsonresult);
+
+                                                //String str_email = json.getString("email");
+                                                idFacebookUser = json.getLong("id");
+                                                nameUser = json.getString("name");
+
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+
+                                }).executeAsync();
+
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Toast.makeText(NoteActivity.this, "Canceled login to facebook", Toast.LENGTH_LONG).show();
+                    }
+
+                    @Override
+                    public void onError(FacebookException error) {
+                        Toast.makeText(NoteActivity.this, "Error login to facebook", Toast.LENGTH_LONG).show();
+                    }
+                });
+    }
+
+
 }

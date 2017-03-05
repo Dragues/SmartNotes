@@ -2,7 +2,6 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -10,25 +9,21 @@ import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import com.vk.sdk.VKSdk;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -47,6 +42,8 @@ public class NoteAdapter extends CursorAdapter {
         private Uri imageUri;
         private int id;
         private TextView coords;
+        private ImageView vkView;
+
     }
 
 
@@ -65,12 +62,13 @@ public class NoteAdapter extends CursorAdapter {
         holder.export = (ImageView) view.findViewById(R.id.export);
         holder.photo = (ImageView) view.findViewById(R.id.photo);
         holder.coords = (TextView) view.findViewById(R.id.coords);
+        holder.vkView = (ImageView) view.findViewById(R.id.vk);
         view.setTag(holder);
         return view;
     }
 
     @Override
-    public void bindView(View view, Context context, Cursor cursor) {
+    public void bindView(View view, Context context, final Cursor cursor) {
         final ViewHolder holder  =   (ViewHolder)    view.getTag();
         final String header = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.HEADER));
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
@@ -87,7 +85,7 @@ public class NoteAdapter extends CursorAdapter {
         holder.edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ContentValues values = Utils.prepareContentValues(holder.id, header, body, marker);
+                ContentValues values = Utils.getContentValuesFromCursor(cursor);
                 Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((FirstLevelActivity) ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();
@@ -139,6 +137,8 @@ public class NoteAdapter extends CursorAdapter {
         view.setTag(holder);
     }
 
+
+
     private class ExportListener implements View.OnClickListener {
 
         private String id;
@@ -182,4 +182,7 @@ public class NoteAdapter extends CursorAdapter {
             ((Activity)ctx).startActivityForResult(photoPickerIntent, FirstLevelActivity.SELECT_PHOTO);
         }
     }
+
+
+
 }

@@ -40,40 +40,42 @@ public class Dialogs {
         }
 
         private void populate(final ContentValues values, final DBHelper helper) {
-
             View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
-
-            final String header = values == null ? null : values.getAsString(DBHelper.NoteColumns.HEADER);
-            final String body = values == null ? null : values.getAsString(DBHelper.NoteColumns.BODY);
-            final int id = values == null ? -1 : values.getAsInteger(DBHelper.NoteColumns.ID);
-            final int marker = values == null ? 1 : values.getAsInteger(DBHelper.NoteColumns.MARKER); // 1 - medium priority
-
-
             final EditText headerView = (EditText) view.findViewById(R.id.header);
             final EditText bodyView = (EditText) view.findViewById(R.id.body);
             final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
             TextView addButton = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
 
-            barPriority.setProgress(marker);
-            if (header != null)
-                headerView.setText(header);
-            if (body != null)
-                bodyView.setText(body);
-
+            if (values != null) {
+                if(values.containsKey(DBHelper.NoteColumns.MARKER))
+                    barPriority.setProgress(values.getAsInteger(DBHelper.NoteColumns.MARKER));
+                if (values.containsKey(DBHelper.NoteColumns.HEADER))
+                    headerView.setText(values.getAsString(DBHelper.NoteColumns.HEADER));
+                if (values.containsKey(DBHelper.NoteColumns.BODY))
+                    bodyView.setText(values.getAsString(DBHelper.NoteColumns.BODY));
+            }
 
             addButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
-                    ContentValues valuesNew = Utils.prepareContentValues(id, headerView.getText().toString(),
-                            bodyView.getText().toString(), barPriority.getProgress());
-                    if (valuesNew.equals(values)) {
-                        Toast.makeText(ctx, "Already added", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    if (headerView.getText().toString().length() != 0 &&  bodyView.getText().toString().length() != 0) {
+                    ContentValues valuesNew =  new ContentValues();
+                    if (values != null)
+                        valuesNew.putAll(values);
+                    valuesNew.put(DBHelper.NoteColumns.HEADER, headerView.getText().toString());
+                    valuesNew.put(DBHelper.NoteColumns.BODY, bodyView.getText().toString());
+                    valuesNew.put(DBHelper.NoteColumns.MARKER, barPriority.getProgress());
+                    if (headerView.getText().toString().length() != 0 && bodyView.getText().toString().length() != 0) {
+                        if(values != null && values.getAsString(DBHelper.NoteColumns.HEADER).equals(headerView.getText().toString()) &&
+                                values.getAsString(DBHelper.NoteColumns.BODY).equals(headerView.getText().toString())) {
+                            Toast.makeText(ctx, "Change data!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
                         helper.insertNote(valuesNew);
+                    }
+                    else {
+                        Toast.makeText(ctx, "Change data!", Toast.LENGTH_SHORT).show();
+                        return;
                     }
                     dismiss();
                 }

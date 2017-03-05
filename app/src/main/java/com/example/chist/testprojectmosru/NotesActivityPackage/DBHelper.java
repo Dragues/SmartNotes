@@ -70,15 +70,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return c;
     }
 
-    // get base columns from cursor
-    public ContentValues getContentValuesFromCursor(Cursor c) {
-        ContentValues cv = new ContentValues();
-        cv.put(NoteColumns.HEADER, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
-        cv.put(NoteColumns.BODY, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
-        cv.put(NoteColumns.MARKER, c.getInt(c.getColumnIndex(NoteColumns.MARKER)));
-        cv.put(NoteColumns.TIME, System.currentTimeMillis());
-        return cv;
-    }
+
 
     public interface NoteColumns {
         String ID = "_id";
@@ -126,9 +118,9 @@ public class DBHelper extends SQLiteOpenHelper {
     public void insertNote(ContentValues cv) {
         cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
         if(System.currentTimeMillis() - LaunchApplication.getInstance().getLasttimeUpdate() < LaunchApplication.validDeltaTime) {
-            if(!cv.containsKey(NoteColumns.MAPX))
+            if(!cv.containsKey(NoteColumns.MAPX) || cv.getAsDouble(NoteColumns.MAPX) == 0)
                 cv.put(NoteColumns.MAPX, LaunchApplication.getInstance().getLastX());
-            if(!cv.containsKey(NoteColumns.MAPY))
+            if(!cv.containsKey(NoteColumns.MAPY) || cv.getAsDouble(NoteColumns.MAPY) == 0)
                 cv.put(NoteColumns.MAPY, LaunchApplication.getInstance().getLastY());
         }
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
@@ -141,6 +133,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
     void deleteNote(String header, String body) {
         db.delete(tableNotesName, NoteColumns.HEADER + '=' + DatabaseUtils.sqlEscapeString(header) + " AND " + NoteColumns.BODY + '=' + DatabaseUtils.sqlEscapeString(body), null);
+        ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+    }
+
+    void deleteNote(String id) {
+        db.delete(tableNotesName, NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(id), null);
         ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
     }
 

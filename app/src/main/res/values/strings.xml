@@ -9,8 +9,18 @@
     <string name="no">Нет</string>
 
     <string name="test">Тест</string>
+    <string name="map">Map</string>
     <string name="save">Save</string>
     <string name="curplace">We are here</string>
     <string name="no_data">No gps data</string>
+
+    <integer name="com_vk_sdk_AppId">5907230</integer>
+    <string name="facebook_app_id">242883742840612</string>
+
+    <string name="instagram_id">610841031ca844d2830e98708463d462</string>
+    <string name="instagram_secret">505d5a5110e74a54b010d4a58a95077a </string>
+    <string name="APP_ID">449…</string>
+    <string name="callbackurl">http:// …</string>
+
 
 </resources>
