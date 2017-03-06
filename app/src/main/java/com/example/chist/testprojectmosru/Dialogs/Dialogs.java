@@ -7,11 +7,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -196,4 +198,31 @@ public class Dialogs {
     }
 
 
+    public static class ShowPhoto extends Dialog {
+
+        private Context ctx;
+
+        public ShowPhoto(Context ctx, Bitmap bitmap) {
+            super(ctx, R.style.ContainerDialogTheme);
+            this.ctx = ctx;
+            setCancelable(true);
+            setCanceledOnTouchOutside(true);
+            populate(bitmap);
+        }
+
+        private void populate(Bitmap bitmap) {
+            View view = LayoutInflater.from(ctx).inflate(R.layout.show_photo_dialog, null);
+            final ImageView photo = (ImageView) view.findViewById(R.id.photo);
+            final ImageView exit = (ImageView) view.findViewById(R.id.exit);
+            Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(ctx, bitmap);
+            photo.setImageBitmap(scaledBitmap);
+            exit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+            setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+    }
 }

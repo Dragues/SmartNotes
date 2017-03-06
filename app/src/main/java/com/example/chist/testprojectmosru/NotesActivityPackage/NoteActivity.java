@@ -135,7 +135,7 @@ public class NoteActivity extends BaseNoteActivity {
         body.setText(noteNew.body);
 
         updateBackground(this, noteNew.marker);
-        Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
+        final Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
         if (bitmap != null)
             photo.setImageBitmap(bitmap);
         else
@@ -192,8 +192,15 @@ public class NoteActivity extends BaseNoteActivity {
             }
         });
 
-
-       // photo.setOnClickListener();
+        if(bitmap != null)
+            photo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Dialog showDialog = new Dialogs.ShowPhoto(NoteActivity.this, bitmap);
+                    showDialog.setCancelable(true);
+                    showDialog.show();
+            }
+            });
 
     }
 

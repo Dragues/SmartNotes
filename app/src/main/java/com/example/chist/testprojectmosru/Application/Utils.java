@@ -1,12 +1,15 @@
 package com.example.chist.testprojectmosru.Application;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -260,5 +263,34 @@ public class Utils {
     public static int getID () {
         final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
         return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
+    }
+
+
+    public static Bitmap getScaledBitMapBaseOnScreenSize(Context ctx, Bitmap bitmapOriginal){
+
+        Bitmap scaledBitmap=null;
+        try {
+            DisplayMetrics metrics = new DisplayMetrics();
+            ((Activity)ctx).getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+
+            int width = bitmapOriginal.getWidth();
+            int height = bitmapOriginal.getHeight();
+
+            float scaleWidth = metrics.scaledDensity;
+            float scaleHeight = metrics.scaledDensity;
+
+            // create a matrix for the manipulation
+            Matrix matrix = new Matrix();
+            // resize the bit map
+            matrix.postScale(scaleWidth, scaleHeight);
+
+            // recreate the new Bitmap
+            scaledBitmap = Bitmap.createBitmap(bitmapOriginal, 0, 0, width, height, matrix, true);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return scaledBitmap;
     }
 }

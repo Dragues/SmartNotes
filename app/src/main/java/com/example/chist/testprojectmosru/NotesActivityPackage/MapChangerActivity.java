@@ -9,8 +9,6 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -37,13 +35,13 @@ public class MapChangerActivity extends BaseNoteActivity {
     private GoogleMap map;
     private Marker curMarker;
     private Button saveBut;
-    private int id;
     private boolean onSave;
     private ArrayList<LatLng> listLoc = new ArrayList<>();
     private double x = 55.751244; // default Moscow
     private double y = 37.618423;
     private boolean launchMode;
     private Button nextFocus;
+    private int curIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,26 +85,33 @@ public class MapChangerActivity extends BaseNoteActivity {
                 }
                 while (c.moveToNext());
             }
+            if (listLoc.size() > 0) {
+                 cameraPosition = new CameraPosition.Builder()
+                        .target(listLoc.get(0))
+                        .zoom(15)
+                        .bearing(45)
+                        .tilt(20)
+                        .build();
+                cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
+                map.animateCamera(cameraUpdate);
+            }
             if(listLoc.size() < 2)
                 nextFocus.setVisibility(View.GONE);
             else {
                 nextFocus.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        LatLng purpose = new LatLng(x,y);
-                        if (listLoc.indexOf(purpose) == -1) {
+                        LatLng purpose = new LatLng(0,0);
+                        if (curIndex == listLoc.size()-1) {
                             purpose =   listLoc.get(0);
+                            curIndex = 0;
                         }
                         else {
-                            if(listLoc.indexOf(purpose) == listLoc.size()-1)
-                                purpose =   listLoc.get(0);
-                            else
-                                purpose =   listLoc.get(listLoc.indexOf(new LatLng(x, y)) + 1);
+                           purpose = listLoc.get(curIndex+1);
+                            curIndex += 1;
                         }
-                        x = purpose.latitude;
-                        y = purpose.longitude;
                         CameraPosition cameraPosition = new CameraPosition.Builder()
-                                .target(new LatLng(x,y))
+                                .target(purpose)
                                 .zoom(15)
                                 .bearing(45)
                                 .tilt(20)
@@ -130,7 +135,6 @@ public class MapChangerActivity extends BaseNoteActivity {
 
             x = getIntent().getDoubleExtra(DBHelper.NoteColumns.MAPX, 0);
             y = getIntent().getDoubleExtra(DBHelper.NoteColumns.MAPY, 0);
-            id = getIntent().getIntExtra(DBHelper.NoteColumns.MAPY, 0);
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(new LatLng(x, y))
