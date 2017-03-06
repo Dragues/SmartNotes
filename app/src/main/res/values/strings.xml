@@ -24,6 +24,8 @@
     <string name="instagram_secret">505d5a5110e74a54b010d4a58a95077a </string>
     <string name="APP_ID">449…</string>
     <string name="callbackurl">http:// …</string>
+    <string name="app_info" > \tПриложение Smart Notes позволяет сохранять заметки, назначать им приоритет, экспортировать их в отдельный файл, постить в социальных сетях информацию о них.\n\t
+        Идея разработки приложения предоставлена компанией mos.ru</string>
 
 
 </resources>

@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.graphics.Color;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
@@ -35,7 +34,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void deleteAll() {
         db.delete(tableNotesName, null, null);
-        ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
         if(new File(Utils.getImagePathInDevice().getAbsolutePath()).exists()){
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(false)); // i don't want to delete above dirs
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(true));
@@ -124,7 +123,7 @@ public class DBHelper extends SQLiteOpenHelper {
                 cv.put(NoteColumns.MAPY, LaunchApplication.getInstance().getLastY());
         }
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-        ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
     }
 
     public void deleteNote(ContentValues cv) {
@@ -133,12 +132,12 @@ public class DBHelper extends SQLiteOpenHelper {
 
     void deleteNote(String header, String body) {
         db.delete(tableNotesName, NoteColumns.HEADER + '=' + DatabaseUtils.sqlEscapeString(header) + " AND " + NoteColumns.BODY + '=' + DatabaseUtils.sqlEscapeString(body), null);
-        ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
     }
 
     void deleteNote(String id) {
         db.delete(tableNotesName, NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(id), null);
-        ctx.getContentResolver().notifyChange(FirstLevelActivity.noteUri, null);
+        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
     }
 
     public Cursor getNotesCursor() {

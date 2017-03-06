@@ -9,10 +9,10 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.example.chist.testprojectmosru.NotesActivityPackage.FirstLevelActivity;
+import com.example.chist.testprojectmosru.NotesActivityPackage.MainNoteActivity;
 import com.example.chist.testprojectmosru.R;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivityOld extends AppCompatActivity implements View.OnClickListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.level1:
-                Intent intent = new Intent(this, FirstLevelActivity.class);
+                Intent intent = new Intent(this, MainNoteActivity.class);
                 startActivity(intent);
                 break;
         }

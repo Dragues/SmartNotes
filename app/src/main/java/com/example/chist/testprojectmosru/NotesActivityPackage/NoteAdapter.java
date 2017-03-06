@@ -19,11 +19,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
-import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
-import com.vk.sdk.VKSdk;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -85,9 +83,9 @@ public class NoteAdapter extends CursorAdapter {
         holder.edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Cursor c = ((FirstLevelActivity) ctx).helper.getNote(holder.id);
+                Cursor c = ((MainNoteActivity) ctx).helper.getNote(holder.id);
                 ContentValues values = Utils.getContentValuesFromCursor(c);
-                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((FirstLevelActivity) ctx).helper);
+                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();
             }
@@ -178,9 +176,9 @@ public class NoteAdapter extends CursorAdapter {
         public void onClick(View v) {
             // Send action to gallery for choosing image
             Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-            ((FirstLevelActivity)ctx).setHeaderOnImageUpdate(id);
+            ((MainNoteActivity)ctx).setHeaderOnImageUpdate(id);
             photoPickerIntent.setType("image/*");
-            ((Activity)ctx).startActivityForResult(photoPickerIntent, FirstLevelActivity.SELECT_PHOTO);
+            ((Activity)ctx).startActivityForResult(photoPickerIntent, MainNoteActivity.SELECT_PHOTO);
         }
     }
 

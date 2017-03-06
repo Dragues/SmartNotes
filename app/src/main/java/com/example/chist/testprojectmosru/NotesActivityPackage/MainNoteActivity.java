@@ -9,12 +9,10 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -31,12 +29,11 @@ import com.vk.sdk.api.VKError;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.util.LinkedList;
 
 /**
  * Created by 1 on 27.02.2017.
  */
-public class FirstLevelActivity extends BaseNoteActivity {
+public class MainNoteActivity extends BaseNoteActivity {
 
     public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/db/notedata");
     public static final int SELECT_PHOTO = 100; // request code for photo
@@ -64,7 +61,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor c = (Cursor) adapter.getItem(position);
-                Intent i = new Intent(FirstLevelActivity.this, NoteActivity.class);
+                Intent i = new Intent(MainNoteActivity.this, NoteActivity.class);
                 i.putExtra(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
                 startActivity(i);
             }
@@ -75,7 +72,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
                 Cursor c = (Cursor) adapter.getItem(position);
                 helper.deleteNote(c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)),
                         c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
-                Utils.deletesCachedImages(FirstLevelActivity.this, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)) + "");
+                Utils.deletesCachedImages(MainNoteActivity.this, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)) + "");
                 return true;
             }
         });
@@ -83,7 +80,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
         findViewById(R.id.addnote).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Dialog addingDialog = new Dialogs.AddingDialog(FirstLevelActivity.this, null, helper);
+                Dialog addingDialog = new Dialogs.AddingDialog(MainNoteActivity.this, null, helper);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
             }
@@ -110,6 +107,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
         getMenuInflater().inflate(R.menu.notemenu, menu);
         getMenuInflater().inflate(R.menu.clear, menu);
         getMenuInflater().inflate(R.menu.show_all_notices, menu);
+        getMenuInflater().inflate(R.menu.info, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -120,6 +118,11 @@ public class FirstLevelActivity extends BaseNoteActivity {
                 Dialog addingDialog = new Dialogs.AddingDialog(this, null, helper);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
+                break;
+            case R.id.infoapp:
+                Dialog infoDialog = new Dialogs.InfoDialog(this);
+                infoDialog.setCancelable(true);
+                infoDialog.show();
                 break;
             case R.id.deletenotes:
                 Dialog dialogConfirm = new Dialogs.ConfirmDialog(this,new Runnable() {
@@ -132,7 +135,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
                 dialogConfirm.show();
                 break;
             case R.id.show_all:
-                Intent i = new Intent(FirstLevelActivity.this, MapChangerActivity.class);
+                Intent i = new Intent(MainNoteActivity.this, MapChangerActivity.class);
                 i.putExtra(MapChangerActivity.LAUNCHMODETAG, true);
                 startActivity(i);
                 break;
@@ -161,7 +164,7 @@ public class FirstLevelActivity extends BaseNoteActivity {
                     Uri selectedImage = intent.getData();
                     InputStream imageStream = null;
                     try {
-                        imageStream = FirstLevelActivity.this.getContentResolver().openInputStream(selectedImage);
+                        imageStream = MainNoteActivity.this.getContentResolver().openInputStream(selectedImage);
                         Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
                         Utils.saveBitmap(yourSelectedImage, String.valueOf(idNoteOnUpdate));
                     } catch (FileNotFoundException e) {
@@ -178,12 +181,12 @@ public class FirstLevelActivity extends BaseNoteActivity {
         if (!VKSdk.onActivityResult(requestCode, resultCode, intent, new VKCallback<VKAccessToken>() {
             @Override
             public void onResult(VKAccessToken res) {
-                Toast.makeText(FirstLevelActivity.this,"INVK", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onError(VKError error) {
-                Toast.makeText(FirstLevelActivity.this,"INVK", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
                 // Произошла ошибка авторизации (например, пользователь запретил авторизацию)
             }
         })) {

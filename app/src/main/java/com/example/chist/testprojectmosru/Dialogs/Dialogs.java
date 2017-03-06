@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.Utils;
+import com.example.chist.testprojectmosru.NotesActivityPackage.MainNoteActivity;
 import com.example.chist.testprojectmosru.NotesActivityPackage.NoteActivity;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
@@ -217,6 +218,30 @@ public class Dialogs {
             Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(ctx, bitmap);
             photo.setImageBitmap(scaledBitmap);
             exit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+            setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+    }
+
+    public static class InfoDialog extends Dialog {
+        private Context ctx;
+
+        public InfoDialog(Context ctx) {
+            super(ctx, R.style.ContainerDialogTheme);
+            this.ctx = ctx;
+            setCancelable(true);
+            setCanceledOnTouchOutside(true);
+            populate();
+        }
+
+        private void populate() {
+            View view = LayoutInflater.from(ctx).inflate(R.layout.app_info_dialog, null);
+
+            view.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dismiss();
