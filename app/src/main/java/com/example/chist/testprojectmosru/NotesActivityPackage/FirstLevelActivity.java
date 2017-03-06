@@ -51,8 +51,8 @@ public class FirstLevelActivity extends BaseNoteActivity {
         if (!FacebookSdk.isInitialized())
             FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.firstlvllayout);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         view = (ListView) findViewById(R.id.notelist);
         adapter = new NoteAdapter(this, helper.getNotesCursor(), true);
