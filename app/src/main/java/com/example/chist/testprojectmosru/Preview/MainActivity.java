@@ -33,13 +33,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
         findViewById(R.id.level1).setOnClickListener(this);
-//        findViewById(R.id.level2).setOnClickListener(this);
-//        findViewById(R.id.level3).setOnClickListener(this);
-//        findViewById(R.id.level4).setOnClickListener(this);
-//        findViewById(R.id.level5).setOnClickListener(this);
-//        findViewById(R.id.level6).setOnClickListener(this);
-//        findViewById(R.id.level7).setOnClickListener(this);
-//        findViewById(R.id.level8).setOnClickListener(this);
     }
 
     @Override

@@ -85,7 +85,8 @@ public class NoteAdapter extends CursorAdapter {
         holder.edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ContentValues values = Utils.getContentValuesFromCursor(cursor);
+                Cursor c = ((FirstLevelActivity) ctx).helper.getNote(holder.id);
+                ContentValues values = Utils.getContentValuesFromCursor(c);
                 Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((FirstLevelActivity) ctx).helper);
                 dialog.setCancelable(true);
                 dialog.show();

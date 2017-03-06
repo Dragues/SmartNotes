@@ -79,22 +79,16 @@ public class NoteActivity extends BaseNoteActivity {
 
     private Note noteOld;
     private Note noteNew;
+
+    // vk fields
     private ImageView facebook;
     private ImageView vk;
     public CallbackManager manager;
 
+    // facebook info after login
     private long idFacebookUser;
     private String nameUser;
 
-    class Point {
-        public double x;
-        public double y;
-
-        public Point(double x, double y) {
-            this.x = x;
-            this.y = y;
-        }
-    }
 
     private static String[] sMyScope = new String[]{VKScope.FRIENDS, VKScope.WALL, VKScope.PHOTOS, VKScope.NOHTTPS};
 
@@ -172,7 +166,6 @@ public class NoteActivity extends BaseNoteActivity {
             observers.add(observer);
         }
 
-
         facebook = (ImageView)findViewById(R.id.facebook);
         facebook.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -198,6 +191,9 @@ public class NoteActivity extends BaseNoteActivity {
                 }
             }
         });
+
+
+       // photo.setOnClickListener();
 
     }
 
