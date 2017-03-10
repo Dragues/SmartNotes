@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
@@ -54,8 +55,6 @@ import java.util.Map;
  * Created by 1 on 28.02.2017.
  */
 public class NoteActivity extends BaseNoteActivity {
-
-
     private static final String AUTHURL = "https://api.instagram.com/oauth/authorize/";
     //Used for Authentication.
     private static final String TOKENURL ="https://api.instagram.com/oauth/access_token/";
@@ -129,7 +128,7 @@ public class NoteActivity extends BaseNoteActivity {
         if(noteNew.x != 0 || noteNew.y != 0)
             gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
         else
-           gps.setText("GPS NO DATA");
+            gps.setText("GPS NO DATA");
 
         header.setText(noteNew.header);
         body.setText(noteNew.body);
@@ -154,9 +153,9 @@ public class NoteActivity extends BaseNoteActivity {
                 @Override
                 public void onChange(boolean selfChange) {
                     // Если данные свежие то добавляю последние с GPS
-                    if (Math.abs(noteNew.timestamp - LaunchApplication.getInstance().getLasttimeUpdate()) < LaunchApplication.getInstance().validDeltaTime) {
-                        noteNew.x = noteOld.x = LaunchApplication.getInstance().getLastX();
-                        noteNew.y = noteOld.y = LaunchApplication.getInstance().getLastY();
+                    if (Math.abs(noteNew.timestamp - LocationHolder.getInstance(null).getLastTimeUpdate()) < LocationHolder.validDeltaTime) {
+                        noteNew.x = noteOld.x = LocationHolder.getInstance(null).getLastX();
+                        noteNew.y = noteOld.y = LocationHolder.getInstance(null).getLastY();
                         gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
                         getContentResolver().unregisterContentObserver(this);
                     }
@@ -199,7 +198,7 @@ public class NoteActivity extends BaseNoteActivity {
                     Dialog showDialog = new Dialogs.ShowPhoto(NoteActivity.this, bitmap);
                     showDialog.setCancelable(true);
                     showDialog.show();
-            }
+                }
             });
 
     }
@@ -306,19 +305,13 @@ public class NoteActivity extends BaseNoteActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (LaunchApplication.getInstance().onGPSUpdate != null) {
-            noteNew.x = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[0]);
-            noteNew.y = Double.parseDouble(LaunchApplication.getInstance().onGPSUpdate.split(MapChangerActivity.SEPARATOR)[1]);
+        if (LocationHolder.onGPSUpdate != null) {
+            noteNew.x = Double.parseDouble(LocationHolder.onGPSUpdate.split(MapChangerActivity.SEPARATOR)[0]);
+            noteNew.y = Double.parseDouble(LocationHolder.onGPSUpdate.split(MapChangerActivity.SEPARATOR)[1]);
             gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
-            LaunchApplication.getInstance().onGPSUpdate = null;
+            LocationHolder.onGPSUpdate = null;
         }
     }
-
-
-
-
-
-
 
     /*
        SOCIAL NETWORKS METHODS
@@ -377,6 +370,7 @@ public class NoteActivity extends BaseNoteActivity {
                     }
                 });
     }
+
 
 
 }

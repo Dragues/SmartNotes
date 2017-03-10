@@ -3,6 +3,7 @@ package com.example.chist.testprojectmosru.Application;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.widget.Toast;
 
@@ -24,7 +25,6 @@ import com.vk.sdk.dialogs.VKShareDialogBuilder;
 public class SocialUtils {
 
     public static void shareWithDialog(final Context ctx, final Bitmap bitmap, Note noteNew, FragmentManager fragmentManager) {
-
         VKShareDialog builder = new VKShareDialog();
         String postResult = "Header note: " + noteNew.header + "\n" +
                 "Description: " + noteNew.body;
@@ -41,7 +41,13 @@ public class SocialUtils {
 
         builder.setAttachmentLink("Smart Notes",
                 "https://play.google.com/store?hl=ru");
-        builder.setShareDialogListener(new VKShareDialog.VKShareDialogListener() {
+        builder.setShareDialogListener(createVKShareDialog(ctx));
+        builder.show(fragmentManager, "VK_SHARE_DIALOG");
+    }
+
+    @NonNull
+    private static VKShareDialog.VKShareDialogListener createVKShareDialog(final Context ctx) {
+        return new VKShareDialog.VKShareDialogListener() {
             @Override
             public void onVkShareComplete(int postId) {
                 Toast.makeText(ctx, "Complete posting", Toast.LENGTH_LONG).show();
@@ -59,8 +65,7 @@ public class SocialUtils {
                 Toast.makeText(ctx, "Error posting", Toast.LENGTH_LONG).show();
                 // recycle bitmap if need
             }
-        });
-        builder.show(fragmentManager, "VK_SHARE_DIALOG");
+        };
     }
 
     public static void shareWithFaceBookDialog(final Context ctx, final Bitmap bitmap, Note noteNew) {

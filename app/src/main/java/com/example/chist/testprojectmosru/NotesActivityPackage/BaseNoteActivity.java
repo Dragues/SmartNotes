@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 
 import java.util.LinkedList;
@@ -29,7 +30,7 @@ public class BaseNoteActivity extends AppCompatActivity {
 
         // Придет нотификация когда обновятся данные gps в adapter-е заметок
         // решил не давать прямого доступа адаптеру на модификацию данных базы)
-        getContentResolver().registerContentObserver(Utils.getGeoDataUri(), false, observer = new ContentObserver(new Handler()) {
+        getContentResolver().registerContentObserver(Utils.getGeoDataUri(this), false, observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
                 Cursor c = helper.getNotesCursor();
@@ -38,10 +39,10 @@ public class BaseNoteActivity extends AppCompatActivity {
                 do {
                     long time = c.getLong(c.getColumnIndex(DBHelper.NoteColumns.TIME));
                     boolean emptyGps = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)) + c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)) == 0;
-                    if (emptyGps && System.currentTimeMillis() - time < LaunchApplication.validDeltaTime) {
+                    if (emptyGps && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
                         ContentValues values = Utils.getContentValuesFromCursor(c);
-                        values.put(DBHelper.NoteColumns.MAPX, LaunchApplication.getInstance().getLastX());
-                        values.put(DBHelper.NoteColumns.MAPY, LaunchApplication.getInstance().getLastY());
+                        values.put(DBHelper.NoteColumns.MAPX, LocationHolder.getInstance(null).getLastX());
+                        values.put(DBHelper.NoteColumns.MAPY, LocationHolder.getInstance(null).getLastY());
                         helper.insertNote(values);
                     }
                 }

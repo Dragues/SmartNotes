@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
@@ -41,9 +43,7 @@ public class NoteAdapter extends CursorAdapter {
         private int id;
         private TextView coords;
         private ImageView vkView;
-
     }
-
 
     public NoteAdapter(Context context, Cursor c, boolean autoRequery) {
         super(context, c, autoRequery);
@@ -66,7 +66,7 @@ public class NoteAdapter extends CursorAdapter {
     }
 
     @Override
-    public void bindView(View view, Context context, final Cursor cursor) {
+    public void bindView(View view, final Context context, final Cursor cursor) {
         final ViewHolder holder  =   (ViewHolder)    view.getTag();
         final String header = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.HEADER));
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
@@ -80,19 +80,10 @@ public class NoteAdapter extends CursorAdapter {
         holder.body.setText(body);
         holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
         holder.export.setOnClickListener(new ExportListener(holder.export, String.valueOf(holder.id), "HEADER: " + header + " BODY: " + body));
-        holder.edit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Cursor c = ((MainNoteActivity) ctx).helper.getNote(holder.id);
-                ContentValues values = Utils.getContentValuesFromCursor(c);
-                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
-                dialog.setCancelable(true);
-                dialog.show();
-            }
-        });
+        holder.edit.setOnClickListener(createEditOnClickListener(holder));
 
         // IMAGE (обновляем сколько угодно раз, оставляю наблюдатель пока жив адаптер)
-        holder.imageUri = Utils.getImageUri(holder.id);
+        holder.imageUri = Utils.getImageUri(context, holder.id);
         holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if(bitmap != null)
@@ -100,7 +91,40 @@ public class NoteAdapter extends CursorAdapter {
         else
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                     R.drawable.no_data));
-        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, new ContentObserver(new Handler()) {
+        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, createImageContentObserver(holder));
+
+        // GPS
+        if (X != 0 && Y != 0)
+            holder.coords.setText("X: " + X + "\n" + "Y: "  + Y);
+        else {
+            final ContentObserver gpsObserver = createGPSContentObserver(context, holder, X, Y, time);
+            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
+            ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
+        }
+
+        view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
+        view.setTag(holder);
+    }
+
+    @NonNull
+    private ContentObserver createGPSContentObserver(final Context context, final ViewHolder holder, final double x, final double y, final long time) {
+        return new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                if ((x == 0 || y == 0) && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
+                    ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(context),null);
+                    holder.coords.setText("X: " + LocationHolder.getInstance(null).getLastX() + "\n" +
+                            "Y: " + LocationHolder.getInstance(null).getLastY());
+                    ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
+                }
+
+            }
+        };
+    }
+
+    @NonNull
+    private ContentObserver createImageContentObserver(final ViewHolder holder) {
+        return new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
                 Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
@@ -110,32 +134,22 @@ public class NoteAdapter extends CursorAdapter {
                     holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                             R.drawable.no_data));
             }
-        });
-
-        // GPS
-        if (X != 0 && Y != 0)
-            holder.coords.setText("X: " + X + "\n" + "Y: "  + Y);
-        else {
-            final ContentObserver gpsObserver = new ContentObserver(new Handler()) {
-                @Override
-                public void onChange(boolean selfChange) {
-                    if ((X == 0 || Y == 0) && System.currentTimeMillis() - time < LaunchApplication.validDeltaTime) {
-                        ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(),null);
-                        holder.coords.setText("X: " + LaunchApplication.getInstance().getLastX() + "\n" +
-                                "Y: " + LaunchApplication.getInstance().getLastY());
-                        ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
-                    }
-
-                }
-            };
-            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
-            ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(), false, gpsObserver);
-        }
-
-        view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
-        view.setTag(holder);
+        };
     }
 
+    @NonNull
+    private View.OnClickListener createEditOnClickListener(final ViewHolder holder) {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Cursor c = ((MainNoteActivity) ctx).helper.getNote(holder.id);
+                ContentValues values = Utils.getContentValuesFromCursor(c);
+                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
+                dialog.setCancelable(true);
+                dialog.show();
+            }
+        };
+    }
 
 
     private class ExportListener implements View.OnClickListener {
@@ -181,7 +195,4 @@ public class NoteAdapter extends CursorAdapter {
             ((Activity)ctx).startActivityForResult(photoPickerIntent, MainNoteActivity.SELECT_PHOTO);
         }
     }
-
-
-
 }

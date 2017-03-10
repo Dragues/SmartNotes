@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,8 +35,7 @@ import java.io.InputStream;
  * Created by 1 on 27.02.2017.
  */
 public class MainNoteActivity extends BaseNoteActivity {
-
-    public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/db/notedata");
+    public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.PACKAGE_NAME + "/db/notedata");
     public static final int SELECT_PHOTO = 100; // request code for photo
 
     private ListView view;
@@ -57,16 +57,27 @@ public class MainNoteActivity extends BaseNoteActivity {
 
         registerContentObservers();
 
-        view.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        view.setOnItemClickListener(createItemClickListener());
+        view.setOnItemLongClickListener(createItemLongClickListener());
+
+        findViewById(R.id.addnote).setOnClickListener(createNoteOnClickListener());
+    }
+
+    @NonNull
+    private View.OnClickListener createNoteOnClickListener() {
+        return new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor c = (Cursor) adapter.getItem(position);
-                Intent i = new Intent(MainNoteActivity.this, NoteActivity.class);
-                i.putExtra(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
-                startActivity(i);
+            public void onClick(View v) {
+                Dialog addingDialog = new Dialogs.AddingDialog(MainNoteActivity.this, null, helper);
+                addingDialog.setCancelable(true);
+                addingDialog.show();
             }
-        });
-        view.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+        };
+    }
+
+    @NonNull
+    private AdapterView.OnItemLongClickListener createItemLongClickListener() {
+        return new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 Cursor c = (Cursor) adapter.getItem(position);
@@ -75,16 +86,20 @@ public class MainNoteActivity extends BaseNoteActivity {
                 Utils.deletesCachedImages(MainNoteActivity.this, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)) + "");
                 return true;
             }
-        });
+        };
+    }
 
-        findViewById(R.id.addnote).setOnClickListener(new View.OnClickListener() {
+    @NonNull
+    private AdapterView.OnItemClickListener createItemClickListener() {
+        return new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View v) {
-                Dialog addingDialog = new Dialogs.AddingDialog(MainNoteActivity.this, null, helper);
-                addingDialog.setCancelable(true);
-                addingDialog.show();
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Cursor c = (Cursor) adapter.getItem(position);
+                Intent i = new Intent(MainNoteActivity.this, NoteActivity.class);
+                i.putExtra(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
+                startActivity(i);
             }
-        });
+        };
     }
 
     public void setHeaderOnImageUpdate(int idNoteOnUpdate) {
@@ -128,7 +143,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                 Dialog dialogConfirm = new Dialogs.ConfirmDialog(this,new Runnable() {
                     @Override
                     public void run() {
-                       helper.deleteAll();
+                        helper.deleteAll();
                     }
                 });
                 dialogConfirm.setCancelable(true);
@@ -171,14 +186,21 @@ public class MainNoteActivity extends BaseNoteActivity {
                         e.printStackTrace();
                     }
                     if(idNoteOnUpdate != -1) {
-                        this.getContentResolver().notifyChange(Utils.getImageUri(idNoteOnUpdate),null);
+                        this.getContentResolver().notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate),null);
                         idNoteOnUpdate = -1;
                     }
                     return;
                 }
         }
 
-        if (!VKSdk.onActivityResult(requestCode, resultCode, intent, new VKCallback<VKAccessToken>() {
+        if (!VKSdk.onActivityResult(requestCode, resultCode, intent, createVKCallback())) {
+            super.onActivityResult(requestCode, resultCode, intent);
+        }
+    }
+
+    @NonNull
+    private VKCallback<VKAccessToken> createVKCallback() {
+        return new VKCallback<VKAccessToken>() {
             @Override
             public void onResult(VKAccessToken res) {
                 Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
@@ -189,9 +211,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                 Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
                 // Произошла ошибка авторизации (например, пользователь запретил авторизацию)
             }
-        })) {
-            super.onActivityResult(requestCode, resultCode, intent);
-        }
+        };
     }
 
 
@@ -199,5 +219,4 @@ public class MainNoteActivity extends BaseNoteActivity {
         final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
         return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
     }
-
 }

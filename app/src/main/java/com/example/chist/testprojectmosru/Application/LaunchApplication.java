@@ -31,78 +31,41 @@ import java.util.Locale;
 /**
  * Created by 1 on 27.02.2017.
  */
-public class LaunchApplication extends Application implements Application.ActivityLifecycleCallbacks {
-
+public class LaunchApplication extends Application implements Application.ActivityLifecycleCallbacks, LocationListener{
     public static final String APP_PREFERENCES = "global_prefs";
-    public static final String EMPTYGPS = "emptygps";
-    public static int validDeltaTime = 60000; // время в течении которого будут подтягиваться gps координаты
+    public static String PACKAGE_NAME;
 
     private static boolean isActivityVisible;
 
-    private boolean isWiFiEnabled = false;
-    private boolean isGpsEnabled = false;
-    private double lastX;
-    private double lastY;
-    private long lasttimeUpdate;
-    private  LocationListener locationListener;
-    private   LocationManager locationManager;
-    public String onGPSUpdate = null;
+    private LocationHolder locationHolder;
 
-    public double getLastX() { return lastX; }
-    public double getLastY() { return lastY; }
-    public long   getLasttimeUpdate() { return lasttimeUpdate; }
-    public boolean isWiFiEnabled() { return isWiFiEnabled;}
-    public boolean isGpsEnabled() { return isGpsEnabled; }
     public boolean isActivityVisible() {
         return isActivityVisible;
     }
 
-    {
-        locationListener = new LocationListener() {
-
-            @Override
-            public void onLocationChanged(Location location) {
-                showLocation(location);
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-                checkEnabled();
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-                checkEnabled();
-                showLocation(locationManager.getLastKnownLocation(provider));
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-                if (provider.equals(LocationManager.GPS_PROVIDER)) {
-                    //Log.d("GPS","GPS  "+ String.valueOf(status));
-                } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
-                    //Log.d("GPS", "WIFI " +  String.valueOf(status));
-                }
-            }
-        };
-    }
-
-    private static LaunchApplication _instance;
-    {
-        _instance = this;
-    }
-    public static LaunchApplication getInstance() {
-        return _instance;
-    }
-
     // Activity public callbacks
-    @Override public void onActivityCreated(Activity activity, Bundle savedInstanceState) {}
-    @Override public void onActivityPaused(Activity activity) {}
-    @Override public void onActivityResumed(Activity activity) {}
-    @Override public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
-    @Override public void onActivityDestroyed(Activity activity) {}
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+    }
 
-    @Override public void onActivityStarted(Activity activity) {
+    @Override
+    public void onActivityPaused(Activity activity) {
+    }
+
+    @Override
+    public void onActivityResumed(Activity activity) {
+    }
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+    }
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {
+    }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
         isActivityVisible = true;
     }
 
@@ -115,74 +78,69 @@ public class LaunchApplication extends Application implements Application.Activi
     @Override
     public void onCreate() {
         super.onCreate();
+        PACKAGE_NAME = getPackageName();
+        locationHolder = LocationHolder.getInstance(this);
         VKSdk.initialize(getApplicationContext());
         FacebookSdk.sdkInitialize(getApplicationContext());
         String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
-
-
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                1000 * 10, 10, locationListener);
-        locationManager.requestLocationUpdates(
-                LocationManager.NETWORK_PROVIDER, 1000 * 10, 10,
-                locationListener);
-        checkEnabled();
     }
 
     @Override
     public void onTerminate() {
         super.onTerminate();
-        locationManager.removeUpdates(locationListener);
+        locationHolder.removeManagerUpdates(this);
     }
 
-    private void showLocation(Location location) {
-        if (location == null)
-            return;
-        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
-            updateLocation(location);
-        } else if (location.getProvider().equals(
-                LocationManager.NETWORK_PROVIDER)) {
-            updateLocation(location);
+    public SharedPreferences getAppPrefs() {
+        return getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        locationHolder.showLocation(this, location);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        locationHolder.checkEnabled();
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        locationHolder.checkEnabled();
+        locationHolder.showLocation(this, provider);
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+        if (provider.equals(LocationManager.GPS_PROVIDER)) {
+            //Log.d("GPS","GPS  "+ String.valueOf(status));
+        } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
+            //Log.d("GPS", "WIFI " +  String.valueOf(status));
         }
     }
 
-    private void updateLocation(Location location) {
-        if (location == null)
-            return ;
-        lastX =  location.getLatitude();
-        lastY  = location.getLongitude();
-        lasttimeUpdate = location.getTime();
-        this.getContentResolver().notifyChange(Utils.getGeoDataUriAdapter(),null);
+    public void removeManagerUpdates(){
+
     }
 
-    private void checkEnabled() {
-        isGpsEnabled = locationManager
-                .isProviderEnabled(LocationManager.GPS_PROVIDER);
-        isWiFiEnabled = locationManager
-                .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-    }
-
-    public static SharedPreferences getAppPrefs() {
-        return getInstance().getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
-    }
-
-
-    public static boolean hasEmptyGPSInBase() {
+    public boolean hasEmptyGPSInBase() {
         SharedPreferences prefs = getAppPrefs();
-            return prefs.contains(EMPTYGPS);
+        return prefs.contains(LocationHolder.EMPTYGPS);
     }
 
-    public static void putFlagEmptyGPS() {
+    public void putFlagEmptyGPS() {
         SharedPreferences prefs = getAppPrefs();
-        prefs.edit().putString(EMPTYGPS, "anything text").commit();
+        prefs.edit().putString(LocationHolder.EMPTYGPS, "anything text").commit();
         return;
     }
 
     // Dangerous high-load method. It's not recommended for use
     // Working only with network
-    public static String getCountryPlaceFromCoords(double MyLat, double MyLong) {
+    public String getCountryPlaceFromCoords(double MyLat, double MyLong) {
         String result = "";
-        Geocoder geocoder = new Geocoder(_instance, Locale.getDefault());
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
         List<Address> addresses = null;
         try {
             addresses = geocoder.getFromLocation(MyLat, MyLong, 1);
@@ -195,6 +153,4 @@ public class LaunchApplication extends Application implements Application.Activi
         }
         return result;
     }
-
-
 }

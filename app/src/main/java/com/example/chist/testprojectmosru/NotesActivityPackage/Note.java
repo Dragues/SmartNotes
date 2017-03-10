@@ -6,7 +6,6 @@ import android.database.Cursor;
  * Created by 1 on 04.03.2017.
  */
 public class Note implements Cloneable{
-
     public String header;
     public String body;
     public int marker;
@@ -47,5 +46,4 @@ public class Note implements Cloneable{
         }
         return null;
     }
-
 }
