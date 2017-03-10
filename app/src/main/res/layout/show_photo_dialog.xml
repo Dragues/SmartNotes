@@ -6,15 +6,15 @@
 
 
     <ImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="@dimen/exit_dialog_width"
+        android:layout_height="@dimen/exit_dialog_width"
         android:id="@+id/exit"
         android:background="@drawable/cross"
         android:layout_gravity="right"/>
 
     <ImageView
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="@dimen/dialog_photo_width"
+        android:layout_height="@dimen/dialog_photo_width"
         android:id="@+id/photo"
         android:layout_weight="1"/>
 </LinearLayout>

@@ -21,9 +21,10 @@
 
         <ImageView
             android:id="@+id/photo"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginLeft="20dp" />
+            android:layout_width="@dimen/icon_width"
+            android:layout_height="@dimen/icon_width"
+            android:layout_marginLeft="@dimen/icon_marginleft"
+            android:layout_marginTop="@dimen/icon_margintop"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -41,7 +42,7 @@
                 android:layout_marginLeft="10dp"
                 android:text="Header"
                 android:textColor="#000000"
-                android:textSize="20sp"
+                android:textSize="@dimen/note_item_header_textsize"
                 android:singleLine="true"/>
 
 
@@ -52,7 +53,7 @@
                 android:layout_marginLeft="15dp"
                 android:text="Body"
                 android:textColor="#000000"
-                android:textSize="15sp"
+                android:textSize="@dimen/note_item_body_textsize"
                 android:singleLine="true"/>
 
         </LinearLayout>
@@ -64,15 +65,15 @@
 
         <ImageView
             android:id="@+id/export"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="@dimen/note_item_subicons"
+            android:layout_height="@dimen/note_item_subicons"
             android:layout_marginRight="20dp"
             android:background="@drawable/exported" />
 
         <ImageView
             android:id="@+id/edit"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="@dimen/note_item_subicons"
+            android:layout_height="@dimen/note_item_subicons"
             android:layout_marginRight="20dp"
             android:background="@drawable/icn_edit_dark" />
             </LinearLayout>
@@ -81,10 +82,11 @@
 
     <LinearLayout
         android:layout_width="fill_parent"
-        android:layout_height="30dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:layout_marginTop="@dimen/coords_margintop"
         android:layout_gravity="center_horizontal"
         android:visibility="visible"
         android:layout_marginBottom="10dp">
@@ -92,11 +94,11 @@
         <TextView
             android:id="@+id/coords"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:visibility="visible"
-            android:layout_marginLeft="20dp"
+            android:layout_marginLeft="@dimen/coords_marginleft"
             android:text="@string/no_data"
             android:layout_weight="1">
         </TextView>

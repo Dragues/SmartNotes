@@ -4,8 +4,8 @@
 
     <item android:id="@+id/infoapp"
         android:icon="@drawable/info"
-        android:title="Adding note"
-        app:showAsAction="always"
+        android:title="@string/info"
+        app:showAsAction="never"
         android:enabled="true"
         />
 </menu>

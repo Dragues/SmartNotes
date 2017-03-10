@@ -3,4 +3,33 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+    <dimen name="fab_margin_right">25dp</dimen>
+    <dimen name="fab_margin_bottom">25dp</dimen>
+    <dimen name="info_width">100dp</dimen>
+    <dimen name="info_text_margin">20dp</dimen>
+    <dimen name="info_icon_margintop">20dp</dimen>
+    <dimen name="textsize_info">15sp</dimen>
+    <dimen name="textheader_margin">13dp</dimen>
+    <dimen name="headertextsize">20sp</dimen>
+    <dimen name="icon_width">50dp</dimen>
+    <dimen name="icon_marginleft">20dp</dimen>
+    <dimen name="note_item_header_textsize">20sp</dimen>
+    <dimen name="note_item_body_textsize">15sp</dimen>
+    <dimen name="note_item_subicons">30dp</dimen>
+
+    <dimen name="icon_note_width">200dp</dimen>
+    <dimen name="textsize_noteview_header">20sp</dimen>
+    <dimen name="textsize_noteview_body">15sp</dimen>
+    <dimen name="social_icon_width">35dp</dimen>
+
+    <dimen name="coords_marginleft">20dp</dimen>
+    <dimen name="coords_margintop">10dp</dimen>
+    <dimen name="exit_dialog_width">50dp</dimen>
+    <dimen name="dialog_photo_width">300dp</dimen>
+
+
+
+
+
 </resources>

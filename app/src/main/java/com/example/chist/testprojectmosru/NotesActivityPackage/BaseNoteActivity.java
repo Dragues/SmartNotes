@@ -25,7 +25,8 @@ public class BaseNoteActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         helper = new DBHelper(this);
-
+        if(!helper.isOpen())
+            helper.open();
         ContentObserver observer;
 
         // Придет нотификация когда обновятся данные gps в adapter-е заметок
@@ -33,6 +34,7 @@ public class BaseNoteActivity extends AppCompatActivity {
         getContentResolver().registerContentObserver(Utils.getGeoDataUri(this), false, observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
+                if(!helper.isOpen()) return;
                 Cursor c = helper.getNotesCursor();
                 if (c.getCount() == 0) return;
                 c.moveToFirst();
@@ -54,20 +56,21 @@ public class BaseNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        super.onStart();
         if (!helper.isOpen()) {
             helper.open();
         }
+        super.onStart();
     }
 
     @Override
     protected void onStop() {
-        super.onStop();
         if (helper.isOpen())
             helper.close();
         for (ContentObserver item : observers) {
             getContentResolver().unregisterContentObserver(item);
         }
         observers.clear();
+        super.onStop();
+
     }
 }

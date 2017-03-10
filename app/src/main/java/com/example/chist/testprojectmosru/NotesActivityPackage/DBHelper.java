@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.LocationHolder;
@@ -27,6 +28,10 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public boolean isOpen() {
         return db.isOpen();
+    }
+
+    public SQLiteDatabase getDb() {
+        return db;
     }
 
     public void open() {
@@ -120,6 +125,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 cv.put(NoteColumns.MAPX, LocationHolder.getInstance(null).getLastX());
             if(!cv.containsKey(NoteColumns.MAPY) || cv.getAsDouble(NoteColumns.MAPY) == 0)
                 cv.put(NoteColumns.MAPY, LocationHolder.getInstance(null).getLastY());
+        }
+        else {
+            //Toast.makeText(ctx, "old or empty gps data", Toast.LENGTH_SHORT).show();
         }
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);

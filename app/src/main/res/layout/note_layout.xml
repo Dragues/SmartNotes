@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/totalnote"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    >
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="10dp"
+    android:background="@drawable/note_background">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -45,8 +52,8 @@
 
         <ImageView
             android:id="@+id/notephoto"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="@dimen/icon_note_width"
+            android:layout_height="@dimen/icon_note_width"
             android:layout_margin="10dp"
             android:layout_gravity="center_horizontal"
             android:layout_below="@+id/gpslayout"/>
@@ -60,7 +67,7 @@
             android:layout_marginTop="10dp"
             android:text="Заголовок новости"
             android:textColor="@color/black"
-            android:textSize="20sp"
+            android:textSize="@dimen/textsize_noteview_header"
             android:textStyle="bold" />
 
 
@@ -72,7 +79,7 @@
         android:layout_marginRight="20dp"
         android:text="Тут будет много текста, который кто то будет читать..."
         android:textColor="@color/black"
-        android:textSize="15sp" />
+        android:textSize="@dimen/textsize_noteview_body" />
     </LinearLayout>
 </ScrollView>
 
@@ -87,35 +94,36 @@
         android:layout_marginTop="10dp">
     <ImageView
         android:id="@+id/vk"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
+        android:layout_width="@dimen/social_icon_width"
+        android:layout_height="@dimen/social_icon_width"
         android:background="@drawable/vk"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"/>
 
     <ImageView
         android:id="@+id/facebook"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
+        android:layout_width="@dimen/social_icon_width"
+        android:layout_height="@dimen/social_icon_width"
         android:background="@drawable/facebook"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"/>
 
     <ImageView
         android:id="@+id/inst"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
+        android:layout_width="@dimen/social_icon_width"
+        android:layout_height="@dimen/social_icon_width"
         android:background="@drawable/inst"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"/>
 
     <ImageView
         android:id="@+id/twitter"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
+        android:layout_width="@dimen/social_icon_width"
+        android:layout_height="@dimen/social_icon_width"
         android:background="@drawable/twitter"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"/>
         </LinearLayout>
 
 </RelativeLayout>
+</LinearLayout>

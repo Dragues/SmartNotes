@@ -15,10 +15,10 @@
         android:layout_weight="1"
         android:background="@drawable/mitem_bg_lightgrey"
         android:gravity="center"
-        android:padding="13dp"
+        android:layout_margin="@dimen/textheader_margin"
         android:text="Вы действительно хотите \n выполнить эту операцию?"
         android:textColor="#000000"
-        android:textSize="18sp" />
+        android:textSize="@dimen/headertextsize" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,11 +34,11 @@
             android:layout_weight="1"
             android:background="@drawable/mitem_bg_lightgrey"
             android:gravity="center"
-            android:padding="13dp"
+            android:padding="@dimen/textheader_margin"
             android:singleLine="true"
             android:text="@string/yes"
             android:textColor="#000000"
-            android:textSize="18sp" />
+            android:textSize="@dimen/headertextsize" />
 
         <TextView
             android:id="@+id/no"
@@ -48,9 +48,9 @@
             android:layout_weight="1"
             android:background="@drawable/mitem_bg_lightgrey"
             android:gravity="center"
-            android:padding="13dp"
+            android:padding="@dimen/textheader_margin"
             android:text="@string/no"
             android:textColor="#000000"
-            android:textSize="18sp" />
+            android:textSize="@dimen/headertextsize" />
     </LinearLayout>
 </LinearLayout>

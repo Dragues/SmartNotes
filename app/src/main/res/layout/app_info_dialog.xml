@@ -2,24 +2,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/dialog_shape">
+    android:background="@drawable/note_background">
 
     <ImageView
-        android:layout_width="100dp"
-        android:layout_height="100dp"
+        android:layout_width="@dimen/info_width"
+        android:layout_height="@dimen/info_width"
         android:id="@+id/imageView"
         android:background="@drawable/info_icon"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="@dimen/info_icon_margintop"
         android:layout_gravity="center_horizontal" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/app_info"
         android:id="@+id/infotext"
-        android:textSize="15sp"
+        android:textSize="@dimen/textsize_info"
+        android:layout_margin="@dimen/info_text_margin"
         android:layout_gravity="center_horizontal" />
 
     <Button
@@ -27,6 +27,7 @@
         android:layout_height="wrap_content"
         android:text="@string/ok"
         android:id="@+id/ok"
+        android:background="@drawable/note_background"
         android:layout_gravity="center_horizontal"
         />
 

@@ -47,6 +47,7 @@ import com.vk.sdk.VKSdk;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,6 +88,11 @@ public class NoteActivity extends BaseNoteActivity {
     // facebook info after login
     private long idFacebookUser;
     private String nameUser;
+
+    // twitter
+    private ImageView twitter;
+
+    private ImageView instagram;
 
 
     private static String[] sMyScope = new String[]{VKScope.FRIENDS, VKScope.WALL, VKScope.PHOTOS, VKScope.NOHTTPS};
@@ -190,6 +196,21 @@ public class NoteActivity extends BaseNoteActivity {
                 }
             }
         });
+        instagram = (ImageView)findViewById(R.id.inst);
+        instagram.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SocialUtils.createInstagramIntent(NoteActivity.this, idNote);
+            }
+        });
+//        TwitterLoginButton btn =
+//        twitter.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//
+//            }
+//        });
+
 
         if(bitmap != null)
             photo.setOnClickListener(new View.OnClickListener() {
@@ -233,9 +254,7 @@ public class NoteActivity extends BaseNoteActivity {
                 gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                 break;
             case R.id.deletenotes:
-                DBHelper helper = new DBHelper(this);
                 helper.deleteNote(String.valueOf(noteOld.id));
-                helper.close();
                 finish();
                 break;
             case android.R.id.home:
