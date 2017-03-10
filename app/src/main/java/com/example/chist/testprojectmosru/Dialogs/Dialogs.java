@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,7 +62,19 @@ public class Dialogs {
                     bodyView.setText(values.getAsString(DBHelper.NoteColumns.BODY));
             }
 
-            addButton.setOnClickListener(new View.OnClickListener() {
+            addButton.setOnClickListener(createAddButtonOnClickListener(values, helper, headerView, bodyView, barPriority));
+            cancelButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+            setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
+
+        @NonNull
+        private View.OnClickListener createAddButtonOnClickListener(final ContentValues values, final DBHelper helper, final EditText headerView, final EditText bodyView, final SeekBar barPriority) {
+            return new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     ContentValues valuesNew =  new ContentValues();
@@ -84,14 +97,7 @@ public class Dialogs {
                     }
                     dismiss();
                 }
-            });
-            cancelButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
-            setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            };
         }
     }
 

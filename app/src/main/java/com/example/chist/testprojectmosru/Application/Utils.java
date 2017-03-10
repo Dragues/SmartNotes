@@ -143,8 +143,8 @@ public class Utils {
         return Environment.getExternalStorageDirectory();
     }
 
-    public static Uri getImageUri(int id) {
-        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/image/" + id);
+    public static Uri getImageUri(Context context, int id) {
+        return Uri.parse("content://" + context.getPackageName() + "/image/" + id);
     }
 
     public static void saveBitmap(Bitmap yourSelectedImage, String header) {
@@ -228,12 +228,12 @@ public class Utils {
                 child.delete();
     }
 
-    public static Uri getGeoDataUriAdapter() {
-        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/geo/adapter");
+    public static Uri getGeoDataUriAdapter(Context context) {
+        return Uri.parse("content://" + context.getPackageName() + "/geo/adapter");
     }
 
-    public static Uri getGeoDataUri() {
-        return Uri.parse("content://" + LaunchApplication.getInstance().getPackageName() + "/geo");
+    public static Uri getGeoDataUri(Context context) {
+        return Uri.parse("content://" + context.getPackageName() + "/geo");
     }
 
     public static ContentValues prepareContentValues(Note noteNew) {
@@ -255,23 +255,23 @@ public class Utils {
         cv.put(DBHelper.NoteColumns.MARKER, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
         cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
         cv.put(DBHelper.NoteColumns.MAPX, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)));
-        cv.put(DBHelper.NoteColumns.MAPY,  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)));
-        cv.put(DBHelper.NoteColumns.ID,  c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
+        cv.put(DBHelper.NoteColumns.MAPY, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)));
+        cv.put(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
         return cv;
     }
 
-    public static int getID () {
+    public static int getID() {
         final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
         return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
     }
 
 
-    public static Bitmap getScaledBitMapBaseOnScreenSize(Context ctx, Bitmap bitmapOriginal){
+    public static Bitmap getScaledBitMapBaseOnScreenSize(Context ctx, Bitmap bitmapOriginal) {
 
-        Bitmap scaledBitmap=null;
+        Bitmap scaledBitmap = null;
         try {
             DisplayMetrics metrics = new DisplayMetrics();
-            ((Activity)ctx).getWindowManager().getDefaultDisplay().getMetrics(metrics);
+            ((Activity) ctx).getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
 
             int width = bitmapOriginal.getWidth();
@@ -287,8 +287,7 @@ public class Utils {
 
             // recreate the new Bitmap
             scaledBitmap = Bitmap.createBitmap(bitmapOriginal, 0, 0, width, height, matrix, true);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return scaledBitmap;

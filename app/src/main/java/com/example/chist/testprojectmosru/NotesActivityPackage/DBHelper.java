@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 
 import java.io.File;
@@ -69,8 +70,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return c;
     }
 
-
-
     public interface NoteColumns {
         String ID = "_id";
         String HEADER = "headerNote";
@@ -116,11 +115,11 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void insertNote(ContentValues cv) {
         cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
-        if(System.currentTimeMillis() - LaunchApplication.getInstance().getLasttimeUpdate() < LaunchApplication.validDeltaTime) {
+        if(System.currentTimeMillis() - LocationHolder.getInstance(null).getLastTimeUpdate() < LocationHolder.validDeltaTime) {
             if(!cv.containsKey(NoteColumns.MAPX) || cv.getAsDouble(NoteColumns.MAPX) == 0)
-                cv.put(NoteColumns.MAPX, LaunchApplication.getInstance().getLastX());
+                cv.put(NoteColumns.MAPX, LocationHolder.getInstance(null).getLastX());
             if(!cv.containsKey(NoteColumns.MAPY) || cv.getAsDouble(NoteColumns.MAPY) == 0)
-                cv.put(NoteColumns.MAPY, LaunchApplication.getInstance().getLastY());
+                cv.put(NoteColumns.MAPY, LocationHolder.getInstance(null).getLastY());
         }
         db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
@@ -159,8 +158,4 @@ public class DBHelper extends SQLiteOpenHelper {
 //      }
         return c;
     }
-
-
-
-
 }
