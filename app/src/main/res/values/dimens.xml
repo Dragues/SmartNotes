@@ -13,6 +13,7 @@
     <dimen name="textheader_margin">13dp</dimen>
     <dimen name="headertextsize">20sp</dimen>
     <dimen name="icon_width">50dp</dimen>
+    <dimen name="icon_margintop">10dp</dimen>
     <dimen name="icon_marginleft">20dp</dimen>
     <dimen name="note_item_header_textsize">20sp</dimen>
     <dimen name="note_item_body_textsize">15sp</dimen>
@@ -27,9 +28,4 @@
     <dimen name="coords_margintop">10dp</dimen>
     <dimen name="exit_dialog_width">50dp</dimen>
     <dimen name="dialog_photo_width">300dp</dimen>
-
-
-
-
-
 </resources>
