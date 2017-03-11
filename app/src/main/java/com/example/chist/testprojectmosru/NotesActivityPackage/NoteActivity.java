@@ -13,6 +13,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -47,7 +48,6 @@ import com.vk.sdk.VKSdk;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -73,26 +73,16 @@ public class NoteActivity extends BaseNoteActivity {
 
     private HashMap<Integer, Intent> mapPendings = new HashMap<>(); // pendings for update anything
     private TextView header, body, gps;
-    private ImageView photo;
     private int idNote;
-    private Button changeLocation;
 
     private Note noteOld;
     private Note noteNew;
 
-    // vk fields
-    private ImageView facebook;
-    private ImageView vk;
     public CallbackManager manager;
 
     // facebook info after login
     private long idFacebookUser;
     private String nameUser;
-
-    // twitter
-    private ImageView twitter;
-
-    private ImageView instagram;
 
 
     private static String[] sMyScope = new String[]{VKScope.FRIENDS, VKScope.WALL, VKScope.PHOTOS, VKScope.NOHTTPS};
@@ -104,23 +94,53 @@ public class NoteActivity extends BaseNoteActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setTitle(getString(R.string.viewer_note));
+
         manager = CallbackManager.Factory.create();
-
-        Bundle bundle = getIntent().getExtras();
-        idNote = bundle.getInt(DBHelper.NoteColumns.ID);
-
-        Cursor c = helper.getNote(idNote);
-        noteOld = new Note(c);
+        idNote = getIntent().getExtras().getInt(DBHelper.NoteColumns.ID);
+        noteOld = new Note(helper.getNote(idNote));
         noteNew = (Note)noteOld.clone();
-
+        if(noteNew.x == 0 && noteNew.y == 0) {
+            observers.add(createContentObserver());
+        }
+        updateBackground(this, noteNew.marker);
         header = (TextView) findViewById(R.id.header);
+        header.setText(noteNew.header);
         body = (TextView) findViewById(R.id.body);
-        photo = (ImageView) findViewById(R.id.notephoto);
-        gps = (TextView) findViewById(R.id.gps);
-        changeLocation = (Button)findViewById(R.id.changelocation);
-        changeLocation = (Button)findViewById(R.id.changelocation);
+        body.setText(noteNew.body);
+        Button changeLocation = (Button) findViewById(R.id.changelocation);
+        changeLocation.setOnClickListener(createLocationOnClickListener());
+        fillGps();
+        fillPhoto();
+        ImageView facebook = (ImageView) findViewById(R.id.facebook);
+        facebook.setOnClickListener(createFacebookOnClickListener());
+        ImageView vk = (ImageView) findViewById(R.id.vk);
+        vk.setOnClickListener(createVKOnClickListener());
+    }
 
-        changeLocation.setOnClickListener(new View.OnClickListener() {
+    private void fillPhoto() {
+        ImageView photo = (ImageView) findViewById(R.id.notephoto);
+        final Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
+        if (bitmap != null) {
+            photo.setImageBitmap(bitmap);
+            photo.setOnClickListener(createPhotoOnClickListener(bitmap));
+        }
+        else {
+            photo.setImageBitmap(BitmapFactory.decodeResource(getResources(),
+                    R.drawable.no_data));
+        }
+    }
+
+    private void fillGps() {
+        gps = (TextView) findViewById(R.id.gps);
+        if(noteNew.x != 0 || noteNew.y != 0)
+            gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
+        else
+            gps.setText("GPS NO DATA");
+    }
+
+    @NonNull
+    private View.OnClickListener createLocationOnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NoteActivity.this, MapChangerActivity.class);
@@ -129,50 +149,12 @@ public class NoteActivity extends BaseNoteActivity {
                 i.putExtra(DBHelper.NoteColumns.MAPY, noteNew.y  == 0 ? 37.618423 : noteNew.y);
                 startActivity(i);
             }
-        });
+        };
+    }
 
-        if(noteNew.x != 0 || noteNew.y != 0)
-            gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
-        else
-            gps.setText("GPS NO DATA");
-
-        header.setText(noteNew.header);
-        body.setText(noteNew.body);
-
-        updateBackground(this, noteNew.marker);
-        final Bitmap bitmap = Utils.getSavedBitmap(idNote, true);
-        if (bitmap != null)
-            photo.setImageBitmap(bitmap);
-        else
-            photo.setImageBitmap(BitmapFactory.decodeResource(getResources(),
-                    R.drawable.no_data));
-        photo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // creating popup in fullscreen
-            }
-        });
-
-
-        if(noteNew.x == 0 && noteNew.y == 0) {
-            final ContentObserver observer = new ContentObserver(new Handler()) {
-                @Override
-                public void onChange(boolean selfChange) {
-                    // Если данные свежие то добавляю последние с GPS
-                    if (Math.abs(noteNew.timestamp - LocationHolder.getInstance(null).getLastTimeUpdate()) < LocationHolder.validDeltaTime) {
-                        noteNew.x = noteOld.x = LocationHolder.getInstance(null).getLastX();
-                        noteNew.y = noteOld.y = LocationHolder.getInstance(null).getLastY();
-                        gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
-                        getContentResolver().unregisterContentObserver(this);
-                    }
-
-                }
-            };
-            observers.add(observer);
-        }
-
-        facebook = (ImageView)findViewById(R.id.facebook);
-        facebook.setOnClickListener(new View.OnClickListener() {
+    @NonNull
+    private View.OnClickListener createFacebookOnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (idFacebookUser != 0)
@@ -183,9 +165,12 @@ public class NoteActivity extends BaseNoteActivity {
                 }
 
             }
-        });
-        vk = (ImageView)findViewById(R.id.vk);
-        vk.setOnClickListener(new View.OnClickListener() {
+        };
+    }
+
+    @NonNull
+    private View.OnClickListener createVKOnClickListener() {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (Utils.getID() == 0)
@@ -195,33 +180,36 @@ public class NoteActivity extends BaseNoteActivity {
                     SocialUtils.shareWithDialog(NoteActivity.this, photo, noteNew, getSupportFragmentManager());
                 }
             }
-        });
-        instagram = (ImageView)findViewById(R.id.inst);
-        instagram.setOnClickListener(new View.OnClickListener() {
+        };
+    }
+
+    @NonNull
+    private View.OnClickListener createPhotoOnClickListener(final Bitmap bitmap) {
+        return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //SocialUtils.createInstagramIntent(NoteActivity.this, idNote);
+                Dialog showDialog = new Dialogs.ShowPhoto(NoteActivity.this, bitmap);
+                showDialog.setCancelable(true);
+                showDialog.show();
             }
-        });
-//        TwitterLoginButton btn =
-//        twitter.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
+        };
+    }
 
-
-        if(bitmap != null)
-            photo.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Dialog showDialog = new Dialogs.ShowPhoto(NoteActivity.this, bitmap);
-                    showDialog.setCancelable(true);
-                    showDialog.show();
+    @NonNull
+    private ContentObserver createContentObserver() {
+        return new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                // Если данные свежие то добавляю последние с GPS
+                if (Math.abs(noteNew.timestamp - LocationHolder.getInstance(null).getLastTimeUpdate()) < LocationHolder.validDeltaTime) {
+                    noteNew.x = noteOld.x = LocationHolder.getInstance(null).getLastX();
+                    noteNew.y = noteOld.y = LocationHolder.getInstance(null).getLastY();
+                    gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
+                    getContentResolver().unregisterContentObserver(this);
                 }
-            });
 
+            }
+        };
     }
 
     private void updateBackground(Context ctx, int markerLvl) {
@@ -254,7 +242,9 @@ public class NoteActivity extends BaseNoteActivity {
                 gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                 break;
             case R.id.deletenotes:
+                DBHelper helper = new DBHelper(this);
                 helper.deleteNote(String.valueOf(noteOld.id));
+                helper.close();
                 finish();
                 break;
             case android.R.id.home:
@@ -337,45 +327,41 @@ public class NoteActivity extends BaseNoteActivity {
     */
 
     // Private method to handle Facebook login and callback
-    private void onFblogin()
-    {
+    private void onFblogin() {
         manager = CallbackManager.Factory.create();
-
         // Set permissions
         LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("email", "user_photos", "public_profile"));
 
-        LoginManager.getInstance().registerCallback(manager,
-                new FacebookCallback<LoginResult>() {
+        LoginManager.getInstance().registerCallback(manager, new FacebookCallback<LoginResult>() {
                     @Override
                     public void onSuccess(LoginResult loginResult) {
-
                         Toast.makeText(NoteActivity.this, "Success login to facebook", Toast.LENGTH_LONG).show();
                         GraphRequest.newMeRequest(
-                                loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-                                    @Override
-                                    public void onCompleted(JSONObject json, GraphResponse response) {
-                                        if (response.getError() != null) {
-                                            // handle error
-                                            System.out.println("ERROR");
-                                        } else {
-                                            System.out.println("Success");
-                                            try {
+                                loginResult.getAccessToken(), createGraphJsonObjectCallback()).executeAsync();
+                    }
 
-                                                String jsonresult = String.valueOf(json);
-                                                System.out.println("JSON Result" + jsonresult);
-
-                                                //String str_email = json.getString("email");
-                                                idFacebookUser = json.getLong("id");
-                                                nameUser = json.getString("name");
-
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
+                    @NonNull
+                    private GraphRequest.GraphJSONObjectCallback createGraphJsonObjectCallback() {
+                        return new GraphRequest.GraphJSONObjectCallback() {
+                            @Override
+                            public void onCompleted(JSONObject json, GraphResponse response) {
+                                if (response.getError() != null) {
+                                    // handle error
+                                    System.out.println("ERROR");
+                                } else {
+                                    System.out.println("Success");
+                                    try {
+                                        String jsonresult = String.valueOf(json);
+                                        System.out.println("JSON Result" + jsonresult);
+                                        //String str_email = json.getString("email");
+                                        idFacebookUser = json.getLong("id");
+                                        nameUser = json.getString("name");
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
                                     }
-
-                                }).executeAsync();
-
+                                }
+                            }
+                        };
                     }
 
                     @Override
@@ -389,7 +375,4 @@ public class NoteActivity extends BaseNoteActivity {
                     }
                 });
     }
-
-
-
 }
