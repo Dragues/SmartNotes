@@ -109,7 +109,6 @@ public class LaunchApplication extends Application implements Application.Activi
     public void onProviderEnabled(String provider) {
         locationHolder.checkEnabled();
         locationHolder.showLocation(this, provider);
-
     }
 
     @Override
@@ -119,10 +118,6 @@ public class LaunchApplication extends Application implements Application.Activi
         } else if (provider.equals(LocationManager.NETWORK_PROVIDER)) {
             //Log.d("GPS", "WIFI " +  String.valueOf(status));
         }
-    }
-
-    public void removeManagerUpdates(){
-
     }
 
     public boolean hasEmptyGPSInBase() {
