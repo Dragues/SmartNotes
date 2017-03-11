@@ -102,7 +102,7 @@ public class NoteAdapter extends CursorAdapter {
             ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
         }
 
-        view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
+        //view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
         view.setTag(holder);
     }
 
