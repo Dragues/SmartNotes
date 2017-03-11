@@ -200,7 +200,7 @@ public class NoteActivity extends BaseNoteActivity {
         instagram.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SocialUtils.createInstagramIntent(NoteActivity.this, idNote);
+                //SocialUtils.createInstagramIntent(NoteActivity.this, idNote);
             }
         });
 //        TwitterLoginButton btn =

@@ -24,7 +24,8 @@
             android:layout_width="@dimen/icon_width"
             android:layout_height="@dimen/icon_width"
             android:layout_marginLeft="@dimen/icon_marginleft"
-            android:layout_marginTop="@dimen/icon_margintop"/>
+            android:layout_marginTop="@dimen/icon_margintop"
+            android:adjustViewBounds="false"/>
 
         <LinearLayout
             android:layout_width="0dp"

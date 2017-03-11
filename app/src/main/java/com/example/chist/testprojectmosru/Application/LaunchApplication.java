@@ -32,11 +32,10 @@ import java.util.Locale;
  * Created by 1 on 27.02.2017.
  */
 public class LaunchApplication extends Application implements Application.ActivityLifecycleCallbacks, LocationListener{
+
     public static final String APP_PREFERENCES = "global_prefs";
     public static String PACKAGE_NAME;
-
     private static boolean isActivityVisible;
-
     private LocationHolder locationHolder;
 
     public boolean isActivityVisible() {
