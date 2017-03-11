@@ -31,8 +31,6 @@ import com.example.chist.testprojectmosru.R;
 // In this task i want to use CursorAdapter
 public class NoteAdapter extends CursorAdapter {
 
-    private Context ctx;
-
     protected static class ViewHolder {
         protected TextView header;
         protected TextView body;
@@ -47,13 +45,12 @@ public class NoteAdapter extends CursorAdapter {
 
     public NoteAdapter(Context context, Cursor c, boolean autoRequery) {
         super(context, c, autoRequery);
-        this.ctx = context;
     }
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View   view    =   LayoutInflater.from(context).inflate(R.layout.note_item, null);
-        ViewHolder holder  =   new ViewHolder();
+        View view = LayoutInflater.from(context).inflate(R.layout.note_item, null);
+        ViewHolder holder = new ViewHolder();
         holder.header = (TextView) view.findViewById(R.id.header);
         holder.body = (TextView) view.findViewById(R.id.body);
         holder.edit = (ImageView) view.findViewById(R.id.edit);
@@ -78,28 +75,28 @@ public class NoteAdapter extends CursorAdapter {
         holder.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.ID));
         holder.header.setText(header);
         holder.body.setText(body);
-        holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
+        holder.export.setBackground(context.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
         holder.export.setOnClickListener(new ExportListener(holder.export, String.valueOf(holder.id), "HEADER: " + header + " BODY: " + body));
-        holder.edit.setOnClickListener(createEditOnClickListener(holder));
+        holder.edit.setOnClickListener(createEditOnClickListener(context, holder));
 
         // IMAGE (обновляем сколько угодно раз, оставляю наблюдатель пока жив адаптер)
         holder.imageUri = Utils.getImageUri(context, holder.id);
-        holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
+        holder.photo.setOnClickListener(new LoadImageListener(holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if(bitmap != null)
             holder.photo.setImageBitmap(bitmap);
         else
-            holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
+            holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),
                     R.drawable.no_data));
-        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, createImageContentObserver(holder));
+        context.getContentResolver().registerContentObserver(holder.imageUri, false, createImageContentObserver(context, holder));
 
         // GPS
         if (X != 0 && Y != 0)
             holder.coords.setText("X: " + X + "\n" + "Y: "  + Y);
         else {
             final ContentObserver gpsObserver = createGPSContentObserver(context, holder, X, Y, time);
-            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
-            ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
+            holder.coords.setText(context.getResources().getString(R.string.no_data));
+            context.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
         }
 
         //view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
@@ -112,10 +109,10 @@ public class NoteAdapter extends CursorAdapter {
             @Override
             public void onChange(boolean selfChange) {
                 if ((x == 0 || y == 0) && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
-                    ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(context),null);
+                    context.getContentResolver().notifyChange(Utils.getGeoDataUri(context),null);
                     holder.coords.setText("X: " + LocationHolder.getInstance(null).getLastX() + "\n" +
                             "Y: " + LocationHolder.getInstance(null).getLastY());
-                    ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
+                    context.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
                 }
 
             }
@@ -123,7 +120,7 @@ public class NoteAdapter extends CursorAdapter {
     }
 
     @NonNull
-    private ContentObserver createImageContentObserver(final ViewHolder holder) {
+    private ContentObserver createImageContentObserver(final Context context, final ViewHolder holder) {
         return new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
@@ -131,20 +128,20 @@ public class NoteAdapter extends CursorAdapter {
                 if (bitmap != null)
                     holder.photo.setImageBitmap(bitmap);
                 else
-                    holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
+                    holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),
                             R.drawable.no_data));
             }
         };
     }
 
     @NonNull
-    private View.OnClickListener createEditOnClickListener(final ViewHolder holder) {
+    private View.OnClickListener createEditOnClickListener(final Context context, final ViewHolder holder) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Cursor c = ((MainNoteActivity) ctx).helper.getNote(holder.id);
+                Cursor c = ((MainNoteActivity) context).helper.getNote(holder.id);
                 ContentValues values = Utils.getContentValuesFromCursor(c);
-                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
+                Dialog dialog = new Dialogs.AddingDialog(context, values, ((MainNoteActivity) context).helper);
                 dialog.setCancelable(true);
                 dialog.show();
             }
@@ -166,6 +163,7 @@ public class NoteAdapter extends CursorAdapter {
 
         @Override
         public void onClick(View v) {
+            Context ctx = ((View) getItem(0)).getContext();
             if(!Utils.containsFile(id))
                 Utils.exportToFile(ctx, id, bodyHeader);
             else
@@ -177,17 +175,15 @@ public class NoteAdapter extends CursorAdapter {
     }
 
     private class LoadImageListener implements View.OnClickListener {
-
         private int id;
-        private Context ctx;
 
-        public LoadImageListener(Context ctx, int id) {
+        public LoadImageListener(int id) {
             this.id = id;
-            this.ctx = ctx;
         }
 
         @Override
         public void onClick(View v) {
+            Context ctx = ((View) getItem(0)).getContext();
             // Send action to gallery for choosing image
             Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
             ((MainNoteActivity)ctx).setHeaderOnImageUpdate(id);
