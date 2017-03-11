@@ -108,19 +108,7 @@ public class MapChangerActivity extends BaseNoteActivity {
                 .build();
         CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
         map.animateCamera(cameraUpdate);
-        Cursor c = helper.getNotesCursor();
-        if(c.moveToFirst()){
-            do {
-                double x = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX));
-                double y = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY));
-                String header = c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER));
-                map.addMarker(new MarkerOptions()
-                        .position(new LatLng(x, y))
-                        .title(header));
-                listLoc.add(new LatLng(x,y));
-            }
-            while (c.moveToNext());
-        }
+        moveCursorToFirstIfNeed();
         if (listLoc.size() > 0) {
             cameraPosition = new CameraPosition.Builder()
                     .target(listLoc.get(0))
@@ -135,6 +123,22 @@ public class MapChangerActivity extends BaseNoteActivity {
             nextFocus.setVisibility(View.GONE);
         else {
             nextFocus.setOnClickListener(createNextFocusOnClickListener());
+        }
+    }
+
+    private void moveCursorToFirstIfNeed() {
+        Cursor c = helper.getNotesCursor();
+        if(c.moveToFirst()){
+            do {
+                double x = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX));
+                double y = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY));
+                String header = c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER));
+                map.addMarker(new MarkerOptions()
+                        .position(new LatLng(x, y))
+                        .title(header));
+                listLoc.add(new LatLng(x,y));
+            }
+            while (c.moveToNext());
         }
     }
 
