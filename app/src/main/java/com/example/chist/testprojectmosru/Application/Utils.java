@@ -166,7 +166,7 @@ public class Utils {
         File file = new File(smallImagePath, header);
         if (file.exists()) file.delete();
         try {
-            Bitmap resizeBitMap = needCrop ? Bitmap.createScaledBitmap(bitmap, 120, 120 * bitmap.getHeight()/bitmap.getWidth(), false) : bitmap;
+            Bitmap resizeBitMap = needCrop ? Bitmap.createScaledBitmap(bitmap, 120, 120, false) : bitmap;
             FileOutputStream out = new FileOutputStream(file);
             resizeBitMap.compress(Bitmap.CompressFormat.JPEG, 90, out);
             out.flush();

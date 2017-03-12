@@ -12,12 +12,12 @@
     <dimen name="textsize_info">25sp</dimen>
     <dimen name="textheader_margin">18dp</dimen>
     <dimen name="headertextsize">25sp</dimen>
-    <dimen name="icon_width">80dp</dimen>
+    <dimen name="icon_width">70dp</dimen>
     <dimen name="icon_margintop">10dp</dimen>
     <dimen name="icon_marginleft">20dp</dimen>
     <dimen name="note_item_header_textsize">24sp</dimen>
     <dimen name="note_item_body_textsize">15sp</dimen>
-    <dimen name="note_item_subicons">40dp</dimen>
+    <dimen name="note_item_subicons">30dp</dimen>
 
     <dimen name="icon_note_width">300dp</dimen>
     <dimen name="textsize_noteview_header">30sp</dimen>

@@ -27,6 +27,8 @@
     <string name="app_info" > \tПриложение Smart Notes позволяет сохранять заметки, назначать им приоритет, экспортировать их в отдельный файл, постить в социальных сетях информацию о них.\n\t
         Идея разработки приложения предоставлена компанией mos.ru</string>
     <string name="info">Info</string>
+    <string name="edit">edit</string>
+    <string name="export">export</string>
 
 
 </resources>

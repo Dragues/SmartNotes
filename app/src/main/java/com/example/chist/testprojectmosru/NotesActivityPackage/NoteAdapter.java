@@ -15,8 +15,13 @@ import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
@@ -24,6 +29,15 @@ import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.picasso.CropTransformation;
+import com.squareup.picasso.Picasso;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -37,8 +51,8 @@ public class NoteAdapter extends CursorAdapter {
         protected TextView header;
         protected TextView body;
         protected ImageView photo;
-        private  ImageView edit;
-        private  ImageView export;
+        private ImageView edit;
+        private ImageView export;
         private Uri imageUri;
         private int id;
         private TextView coords;
@@ -52,12 +66,10 @@ public class NoteAdapter extends CursorAdapter {
 
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-        View   view    =   LayoutInflater.from(context).inflate(R.layout.note_item, null);
-        ViewHolder holder  =   new ViewHolder();
+        View view = LayoutInflater.from(context).inflate(R.layout.note_item, null);
+        ViewHolder holder = new ViewHolder();
         holder.header = (TextView) view.findViewById(R.id.header);
         holder.body = (TextView) view.findViewById(R.id.body);
-        holder.edit = (ImageView) view.findViewById(R.id.edit);
-        holder.export = (ImageView) view.findViewById(R.id.export);
         holder.photo = (ImageView) view.findViewById(R.id.photo);
         holder.coords = (TextView) view.findViewById(R.id.coords);
         holder.vkView = (ImageView) view.findViewById(R.id.vk);
@@ -67,43 +79,72 @@ public class NoteAdapter extends CursorAdapter {
 
     @Override
     public void bindView(View view, final Context context, final Cursor cursor) {
-        final ViewHolder holder  =   (ViewHolder)    view.getTag();
+        final ViewHolder holder = (ViewHolder) view.getTag();
         final String header = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.HEADER));
         final String body = cursor.getString(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.BODY));
-        final int  marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
-        final double  X = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPX));
-        final double  Y = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPY));
-        final long  time = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.TIME));
+        final int marker = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MARKER));
+        final double X = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPX));
+        final double Y = cursor.getDouble(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.MAPY));
+        final long time = cursor.getLong(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.TIME));
 
         holder.id = cursor.getInt(cursor.getColumnIndexOrThrow(DBHelper.NoteColumns.ID));
         holder.header.setText(header);
         holder.body.setText(body);
-        holder.export.setBackground(ctx.getResources().getDrawable(Utils.containsFile(header) ? R.drawable.exported : R.drawable.non_exported));
-        holder.export.setOnClickListener(new ExportListener(holder.export, String.valueOf(holder.id), "HEADER: " + header + " BODY: " + body));
-        holder.edit.setOnClickListener(createEditOnClickListener(holder));
+
+        view.findViewById(R.id.popup).setOnClickListener(new PopupListener(ctx, holder.id, header, body));
 
         // IMAGE (обновляем сколько угодно раз, оставляю наблюдатель пока жив адаптер)
         holder.imageUri = Utils.getImageUri(context, holder.id);
         holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
-        if(bitmap != null)
-            holder.photo.setImageBitmap(bitmap);
-        else
+
+        if (bitmap != null) {
+            //holder.photo.setImageBitmap(bitmap);
+            Picasso.with(ctx)
+                    .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
+                    .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
+                    .into(holder.photo);
+        } else {
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                     R.drawable.no_data));
+        }
         ctx.getContentResolver().registerContentObserver(holder.imageUri, false, createImageContentObserver(holder));
 
         // GPS
         if (X != 0 && Y != 0)
-            holder.coords.setText("X: " + X + "\n" + "Y: "  + Y);
+            holder.coords.setText(getDateFromMillis(time) + "\n" + "X: " + X + "\n" + "Y: " + Y);
         else {
+            holder.coords.setText(getDateFromMillis(time) + "\n" + ctx.getResources().getString(R.string.no_data));
             final ContentObserver gpsObserver = createGPSContentObserver(context, holder, X, Y, time);
-            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
             ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
         }
-
-        //view.findViewById(R.id.internatnoteview).setBackgroundColor(Utils.getBackGroundColorFromMarker(ctx, marker));
         view.setTag(holder);
+    }
+
+    private class PopupListener implements View.OnClickListener {
+
+        private int id;
+        private String body;
+        private String header;
+
+        public PopupListener(Context ctx, int id, String header, String body) {
+            this.id = id;
+            this.header = header;
+            this.body = body;
+        }
+
+        @Override
+        public void onClick(View v) {
+            showContextMenu(v, id, header, body);
+        }
+    }
+
+    private String getDateFromMillis(long time) {
+        //1322018752992-Nov 22, 2011 9:25:52 PM
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+        GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("US/Central"));
+        calendar.setTimeInMillis(time);
+        return sdf.format(calendar.getTime());
     }
 
     @NonNull
@@ -112,7 +153,7 @@ public class NoteAdapter extends CursorAdapter {
             @Override
             public void onChange(boolean selfChange) {
                 if ((x == 0 || y == 0) && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
-                    ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(context),null);
+                    ctx.getContentResolver().notifyChange(Utils.getGeoDataUri(context), null);
                     holder.coords.setText("X: " + LocationHolder.getInstance(null).getLastX() + "\n" +
                             "Y: " + LocationHolder.getInstance(null).getLastY());
                     ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
@@ -128,52 +169,17 @@ public class NoteAdapter extends CursorAdapter {
             @Override
             public void onChange(boolean selfChange) {
                 Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
-                if (bitmap != null)
+                if (bitmap != null) {
                     holder.photo.setImageBitmap(bitmap);
-                else
+                    Picasso.with(ctx)
+                            .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + holder.id))
+                            .transform(new CropTransformation(Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2))
+                            .into(holder.photo);
+                } else
                     holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                             R.drawable.no_data));
             }
         };
-    }
-
-    @NonNull
-    private View.OnClickListener createEditOnClickListener(final ViewHolder holder) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Cursor c = ((MainNoteActivity) ctx).helper.getNote(holder.id);
-                ContentValues values = Utils.getContentValuesFromCursor(c);
-                Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
-                dialog.setCancelable(true);
-                dialog.show();
-            }
-        };
-    }
-
-
-    private class ExportListener implements View.OnClickListener {
-
-        private String id;
-        private String bodyHeader;
-        private ImageView exportView;
-
-        public ExportListener(ImageView export, String id, String bodyHeader) {
-            this.id = id;
-            this.bodyHeader = bodyHeader;
-            this.exportView = export;
-        }
-
-        @Override
-        public void onClick(View v) {
-            if(!Utils.containsFile(id))
-                Utils.exportToFile(ctx, id, bodyHeader);
-            else
-                Utils.deleteFileFromSd(ctx, id);
-            // Export or delele can be process with errors, so i prefer check it there.
-            exportView.setBackground(ctx.getResources().getDrawable(
-                    Utils.containsFile(id) ? R.drawable.exported : R.drawable.non_exported));
-        }
     }
 
     private class LoadImageListener implements View.OnClickListener {
@@ -190,9 +196,103 @@ public class NoteAdapter extends CursorAdapter {
         public void onClick(View v) {
             // Send action to gallery for choosing image
             Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-            ((MainNoteActivity)ctx).setHeaderOnImageUpdate(id);
+            ((MainNoteActivity) ctx).setHeaderOnImageUpdate(id);
             photoPickerIntent.setType("image/*");
-            ((Activity)ctx).startActivityForResult(photoPickerIntent, MainNoteActivity.SELECT_PHOTO);
+            ((Activity) ctx).startActivityForResult(photoPickerIntent, MainNoteActivity.SELECT_PHOTO);
+        }
+    }
+
+
+    // creating filter_popup
+    private void showContextMenu(View v, final int idNote, final String header, final String body) {
+        final PopupWindow filterMenu = new PopupWindow(ctx);
+        LayoutInflater layoutInflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View layout = layoutInflater.inflate(R.layout.popup_window_edit, null);
+        ListView lv = (ListView) layout.findViewById(R.id.editlist);
+        lv.setAdapter(new FilterAdapter(ctx, idNote, header, body));
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    runEdit(idNote, header, body);
+                } else if (position == 1) {
+                    runExport(idNote, "HEADER: " + header + " BODY: " + body);
+                }
+                filterMenu.dismiss();
+            }
+        });
+
+        filterMenu.setContentView(layout);
+        filterMenu.setWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+        filterMenu.setHeight(LinearLayout.LayoutParams.WRAP_CONTENT);
+        filterMenu.setFocusable(true);
+        filterMenu.setBackgroundDrawable(ctx.getResources().getDrawable(R.drawable.dialog_shape));
+        filterMenu.showAsDropDown(v);
+    }
+
+    private void runEdit(int idNote, String header, String body) {
+        Cursor c = ((MainNoteActivity) ctx).helper.getNote(idNote);
+        ContentValues values = Utils.getContentValuesFromCursor(c);
+        Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
+        dialog.setCancelable(true);
+        dialog.show();
+    }
+
+    private void runExport(int id, String content) {
+        if (!Utils.containsFile(String.valueOf(id)))
+            Utils.exportToFile(ctx, String.valueOf(id), content);
+        else
+            Utils.deleteFileFromSd(ctx, String.valueOf(id));
+    }
+
+    private class FilterAdapter extends BaseAdapter {
+
+        ArrayList<String> itemlabels;
+        Context ctx;
+        LayoutInflater lInflater;
+        int id;
+        String header;
+        String body;
+
+        public FilterAdapter(Context ctx, int id, String header, String body) {
+            this.ctx = ctx;
+            this.lInflater = (LayoutInflater) ctx
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            this.id = id;
+            this.header = header;
+            this.body = body;
+            itemlabels = new ArrayList<>();
+            itemlabels.add(ctx.getResources().getString(R.string.edit));
+            itemlabels.add(ctx.getResources().getString(R.string.export));
+        }
+
+        @Override
+        public int getCount() {
+            return itemlabels.size();
+        }
+
+        @Override
+        public String getItem(int position) {
+            return itemlabels.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = lInflater.inflate(R.layout.popup_item, parent, false);
+            view.findViewById(R.id.label).setVisibility(View.VISIBLE);
+            ((TextView) view.findViewById(R.id.label)).setText(itemlabels.get(position));
+            if (position == 0) {
+                ((ImageView) view.findViewById(R.id.operationimage)).setBackground(ctx.getResources().getDrawable(R.drawable.icn_edit_dark));
+            } else {
+                ((ImageView) view.findViewById(R.id.operationimage)).setAlpha( Utils.containsFile(String.valueOf(id)) ? 1.0f : 0.5f);
+            }
+
+            return view;
         }
     }
 }
