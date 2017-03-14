@@ -80,8 +80,8 @@ public class Dialogs {
                     ContentValues valuesNew =  new ContentValues();
                     if (values != null)
                         valuesNew.putAll(values);
-                    valuesNew.put(DBHelper.NoteColumns.HEADER, headerView.getText().toString());
-                    valuesNew.put(DBHelper.NoteColumns.BODY, bodyView.getText().toString());
+                    valuesNew.put(DBHelper.NoteColumns.HEADER, headerView.getText().toString().trim());
+                    valuesNew.put(DBHelper.NoteColumns.BODY, bodyView.getText().toString().trim());
                     valuesNew.put(DBHelper.NoteColumns.MARKER, barPriority.getProgress());
                     if (headerView.getText().toString().length() != 0 && bodyView.getText().toString().length() != 0) {
                         if(values != null && values.getAsString(DBHelper.NoteColumns.HEADER).equals(headerView.getText().toString()) &&
@@ -220,15 +220,8 @@ public class Dialogs {
         private void populate(Bitmap bitmap) {
             View view = LayoutInflater.from(ctx).inflate(R.layout.show_photo_dialog, null);
             final ImageView photo = (ImageView) view.findViewById(R.id.photo);
-            final ImageView exit = (ImageView) view.findViewById(R.id.exit);
             Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(ctx, bitmap);
             photo.setImageBitmap(scaledBitmap);
-            exit.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }

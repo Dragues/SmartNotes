@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center">
-
-
-    <ImageView
-        android:layout_width="@dimen/exit_dialog_width"
-        android:layout_height="@dimen/exit_dialog_width"
-        android:id="@+id/exit"
-        android:background="@drawable/cross"
-        android:layout_gravity="right"/>
+    android:gravity="center"
+    android:orientation="vertical">
 
     <ImageView
+        android:id="@+id/photo"
         android:layout_width="@dimen/dialog_photo_width"
         android:layout_height="@dimen/dialog_photo_width"
-        android:id="@+id/photo"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 </LinearLayout>

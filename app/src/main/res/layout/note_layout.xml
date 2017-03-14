@@ -3,61 +3,14 @@
     android:id="@+id/totalnote"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    >
-<RelativeLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:layout_margin="10dp"
-    android:background="@drawable/note_background">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/gpslayout"
-        android:gravity="center_vertical"
-        android:layout_alignParentTop="true">
-        <TextView
-            android:id="@+id/gps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="@string/no_data"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Change location"
-            android:id="@+id/changelocation"
-            android:layout_marginLeft="10dp"/>
-
-    </LinearLayout>
-
-<ScrollView
-    android:layout_width="match_parent"
-    android:layout_height="fill_parent"
-    android:layout_below="@+id/gpslayout"
-    android:layout_above="@+id/publish">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:id="@+id/notebasecontentlayout"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:id="@+id/notephoto"
-            android:layout_width="@dimen/icon_note_width"
-            android:layout_height="@dimen/icon_note_width"
-            android:layout_margin="10dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_below="@+id/gpslayout"/>
-
+        android:layout_height="match_parent"
+        android:layout_margin="5dp"
+        android:background="@drawable/note_background"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/header"
@@ -71,59 +24,133 @@
             android:textStyle="bold" />
 
 
-    <TextView
-        android:id="@+id/body"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:layout_marginRight="20dp"
-        android:text="Тут будет много текста, который кто то будет читать..."
-        android:textColor="@color/black"
-        android:textSize="@dimen/textsize_noteview_body" />
-    </LinearLayout>
-</ScrollView>
+        <LinearLayout
+            android:id="@+id/notebasecontentlayout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_above="@+id/publish"
+            android:layout_below="@+id/header"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-    <LinearLayout
-        android:layout_alignParentBottom="true"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/publish"
-        android:gravity="center"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="10dp">
-    <ImageView
-        android:id="@+id/vk"
-        android:layout_width="@dimen/social_icon_width"
-        android:layout_height="@dimen/social_icon_width"
-        android:background="@drawable/vk"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"/>
 
-    <ImageView
-        android:id="@+id/facebook"
-        android:layout_width="@dimen/social_icon_width"
-        android:layout_height="@dimen/social_icon_width"
-        android:background="@drawable/facebook"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"/>
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/inst"
-        android:layout_width="@dimen/social_icon_width"
-        android:layout_height="@dimen/social_icon_width"
-        android:background="@drawable/inst"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/twitter"
-        android:layout_width="@dimen/social_icon_width"
-        android:layout_height="@dimen/social_icon_width"
-        android:background="@drawable/twitter"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+
+                        <ImageView
+                            android:id="@+id/notephoto"
+                            android:layout_width="@dimen/icon_note_width"
+                            android:layout_height="@dimen/icon_note_width"
+                            android:layout_gravity="center_horizontal"
+                            android:layout_marginLeft="10dp" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:id="@+id/gpslayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentTop="true"
+                                android:gravity="center_vertical"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/gps"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_margin="10dp"
+                                    android:text="@string/no_data"
+                                    android:textColor="@color/black"
+                                    android:textSize="14sp"
+                                    android:textStyle="bold" />
+
+                                <Button
+                                    android:id="@+id/changelocation"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginLeft="10dp"
+                                    android:text="Change location" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/body"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_marginRight="20dp"
+                        android:text="Тут будет много текста, который кто то будет читать..."
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/textsize_noteview_body" />
+                </LinearLayout>
+            </ScrollView>
         </LinearLayout>
 
-</RelativeLayout>
+        <LinearLayout
+            android:id="@+id/publish"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/vk"
+                android:layout_width="@dimen/social_icon_width"
+                android:layout_height="@dimen/social_icon_width"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/vk" />
+
+            <ImageView
+                android:id="@+id/facebook"
+                android:layout_width="@dimen/social_icon_width"
+                android:layout_height="@dimen/social_icon_width"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/facebook" />
+
+            <ImageView
+                android:id="@+id/inst"
+                android:layout_width="@dimen/social_icon_width"
+                android:layout_height="@dimen/social_icon_width"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/inst" />
+
+            <ImageView
+                android:id="@+id/twitter"
+                android:layout_width="@dimen/social_icon_width"
+                android:layout_height="@dimen/social_icon_width"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/twitter" />
+        </LinearLayout>
+
+    </RelativeLayout>
 </LinearLayout>

@@ -41,14 +41,14 @@ public class DBHelper extends SQLiteOpenHelper {
     public void deleteAll() {
         db.delete(tableNotesName, null, null);
         ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
-        if(new File(Utils.getImagePathInDevice().getAbsolutePath()).exists()){
+        if (new File(Utils.getImagePathInDevice().getAbsolutePath()).exists()) {
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(false)); // i don't want to delete above dirs
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(true));
         }
     }
 
     public Cursor getNote(int idNote) {
-        String selector = NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(idNote+"");
+        String selector = NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(idNote + "");
         Cursor c;
         try {
             c = query(selector, Order.ID);
@@ -120,17 +120,20 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void insertNote(ContentValues cv) {
         cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
-        if(System.currentTimeMillis() - LocationHolder.getInstance(null).getLastTimeUpdate() < LocationHolder.validDeltaTime) {
-            if(!cv.containsKey(NoteColumns.MAPX) || cv.getAsDouble(NoteColumns.MAPX) == 0)
+        if (System.currentTimeMillis() - LocationHolder.getInstance(null).getLastTimeUpdate() < LocationHolder.validDeltaTime) {
+            if (!cv.containsKey(NoteColumns.MAPX) || cv.getAsDouble(NoteColumns.MAPX) == 0)
                 cv.put(NoteColumns.MAPX, LocationHolder.getInstance(null).getLastX());
-            if(!cv.containsKey(NoteColumns.MAPY) || cv.getAsDouble(NoteColumns.MAPY) == 0)
+            if (!cv.containsKey(NoteColumns.MAPY) || cv.getAsDouble(NoteColumns.MAPY) == 0)
                 cv.put(NoteColumns.MAPY, LocationHolder.getInstance(null).getLastY());
-        }
-        else {
+        } else {
             //Toast.makeText(ctx, "old or empty gps data", Toast.LENGTH_SHORT).show();
         }
-        db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+        try {
+            db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+            ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+        } catch (Exception e) {
+        } // there is error situation if will be conflict
+
     }
 
     public void deleteNote(ContentValues cv) {

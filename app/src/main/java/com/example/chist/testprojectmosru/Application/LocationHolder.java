@@ -46,14 +46,14 @@ public class LocationHolder {
     }
 
     private LocationHolder(LaunchApplication app) {
-        if(INSTANCE != null){
+        if (INSTANCE != null) {
             throw new IllegalAccessError("You couldn't create second instance of Singleton");
         }
         initLocationManager(app);
     }
 
-    public static LocationHolder getInstance(@Nullable LaunchApplication app){
-        if(INSTANCE == null) {
+    public static LocationHolder getInstance(@Nullable LaunchApplication app) {
+        if (INSTANCE == null) {
             INSTANCE = new LocationHolder(app);
         }
         return INSTANCE;
@@ -91,7 +91,7 @@ public class LocationHolder {
         locationManager.removeUpdates(listener);
     }
 
-    public void showLocation(Context context, Location location){
+    public void showLocation(Context context, Location location) {
         if (location == null)
             return;
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
@@ -118,9 +118,9 @@ public class LocationHolder {
 
     public void updateLocation(Context context, Location location) {
         if (location == null)
-            return ;
-        lastX =  location.getLatitude();
-        lastY  = location.getLongitude();
+            return;
+        lastX = location.getLatitude();
+        lastY = location.getLongitude();
         lastTimeUpdate = location.getTime();
         context.getContentResolver().notifyChange(Utils.getGeoDataUriAdapter(context), null);
     }

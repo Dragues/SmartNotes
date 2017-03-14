@@ -7,6 +7,8 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.DisplayMetrics;
@@ -25,6 +27,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by 1 on 28.02.2017.
@@ -253,7 +257,7 @@ public class Utils {
         cv.put(DBHelper.NoteColumns.HEADER, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
         cv.put(DBHelper.NoteColumns.BODY, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
         cv.put(DBHelper.NoteColumns.MARKER, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
-        cv.put(DBHelper.NoteColumns.TIME, System.currentTimeMillis());
+        cv.put(DBHelper.NoteColumns.TIME, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.TIME)));
         cv.put(DBHelper.NoteColumns.MAPX, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)));
         cv.put(DBHelper.NoteColumns.MAPY, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)));
         cv.put(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
@@ -291,5 +295,22 @@ public class Utils {
             e.printStackTrace();
         }
         return scaledBitmap;
+    }
+
+    // Dangerous method
+    public static String getAddressFromCoords(Context ctx, int latitude, int longitude){
+        Geocoder geocoder = new Geocoder(ctx, Locale.getDefault());
+        List<Address> addresses  = null;
+        try {
+            addresses = geocoder.getFromLocation(latitude,longitude, 1);
+            String city = addresses.get(0).getLocality();
+            String state = addresses.get(0).getAdminArea();
+            String zip = addresses.get(0).getPostalCode();
+            String country = addresses.get(0).getCountryName();
+            return state + ", " +zip + ", " +  city + ", " + country;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

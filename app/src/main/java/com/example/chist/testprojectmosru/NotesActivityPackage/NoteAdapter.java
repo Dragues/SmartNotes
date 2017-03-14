@@ -37,6 +37,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.Observer;
 import java.util.TimeZone;
 
 /**
@@ -46,17 +47,16 @@ import java.util.TimeZone;
 public class NoteAdapter extends CursorAdapter {
 
     private Context ctx;
+    private ArrayList<ContentObserver> listObservers = new ArrayList<>();
 
     protected static class ViewHolder {
         protected TextView header;
         protected TextView body;
         protected ImageView photo;
-        private ImageView edit;
-        private ImageView export;
         private Uri imageUri;
         private int id;
         private TextView coords;
-        private ImageView vkView;
+        private TextView timeupdated;
     }
 
     public NoteAdapter(Context context, Cursor c, boolean autoRequery) {
@@ -72,7 +72,7 @@ public class NoteAdapter extends CursorAdapter {
         holder.body = (TextView) view.findViewById(R.id.body);
         holder.photo = (ImageView) view.findViewById(R.id.photo);
         holder.coords = (TextView) view.findViewById(R.id.coords);
-        holder.vkView = (ImageView) view.findViewById(R.id.vk);
+        holder.timeupdated = (TextView) view.findViewById(R.id.timeupdated);
         view.setTag(holder);
         return view;
     }
@@ -97,7 +97,6 @@ public class NoteAdapter extends CursorAdapter {
         holder.imageUri = Utils.getImageUri(context, holder.id);
         holder.photo.setOnClickListener(new LoadImageListener(ctx, holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
-
         if (bitmap != null) {
             //holder.photo.setImageBitmap(bitmap);
             Picasso.with(ctx)
@@ -108,15 +107,21 @@ public class NoteAdapter extends CursorAdapter {
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(ctx.getResources(),
                     R.drawable.no_data));
         }
-        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, createImageContentObserver(holder));
+        ContentObserver observer = createImageContentObserver(holder);
+        ctx.getContentResolver().registerContentObserver(holder.imageUri, false, observer);
+        listObservers.add(observer);
+
+        //TIME
+        holder.timeupdated.setText(ctx.getResources().getString(R.string.last_udpated) + getDateFromMillis(time));
 
         // GPS
         if (X != 0 && Y != 0)
-            holder.coords.setText(getDateFromMillis(time) + "\n" + "X: " + X + "\n" + "Y: " + Y);
+            holder.coords.setText("X: " + X + "\n" + "Y: " + Y);
         else {
-            holder.coords.setText(getDateFromMillis(time) + "\n" + ctx.getResources().getString(R.string.no_data));
+            holder.coords.setText(ctx.getResources().getString(R.string.no_data));
             final ContentObserver gpsObserver = createGPSContentObserver(context, holder, X, Y, time);
             ctx.getContentResolver().registerContentObserver(Utils.getGeoDataUriAdapter(context), false, gpsObserver);
+            listObservers.add(gpsObserver);
         }
         view.setTag(holder);
     }
@@ -157,6 +162,7 @@ public class NoteAdapter extends CursorAdapter {
                     holder.coords.setText("X: " + LocationHolder.getInstance(null).getLastX() + "\n" +
                             "Y: " + LocationHolder.getInstance(null).getLastY());
                     ctx.getContentResolver().unregisterContentObserver(this); // сделал единоразовую подписку
+                    listObservers.remove(this);
                 }
 
             }
@@ -214,7 +220,7 @@ public class NoteAdapter extends CursorAdapter {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    runEdit(idNote, header, body);
+                    runEdit(idNote);
                 } else if (position == 1) {
                     runExport(idNote, "HEADER: " + header + " BODY: " + body);
                 }
@@ -230,7 +236,7 @@ public class NoteAdapter extends CursorAdapter {
         filterMenu.showAsDropDown(v);
     }
 
-    private void runEdit(int idNote, String header, String body) {
+    private void runEdit(int idNote) {
         Cursor c = ((MainNoteActivity) ctx).helper.getNote(idNote);
         ContentValues values = Utils.getContentValuesFromCursor(c);
         Dialog dialog = new Dialogs.AddingDialog(ctx, values, ((MainNoteActivity) ctx).helper);
@@ -289,10 +295,27 @@ public class NoteAdapter extends CursorAdapter {
             if (position == 0) {
                 ((ImageView) view.findViewById(R.id.operationimage)).setBackground(ctx.getResources().getDrawable(R.drawable.icn_edit_dark));
             } else {
-                ((ImageView) view.findViewById(R.id.operationimage)).setAlpha( Utils.containsFile(String.valueOf(id)) ? 1.0f : 0.5f);
+                ((ImageView) view.findViewById(R.id.operationimage)).setAlpha(Utils.containsFile(String.valueOf(id)) ? 1.0f : 0.5f);
             }
-
             return view;
         }
+    }
+
+    public void unregisterObservers() {
+        for (ContentObserver observer : listObservers)
+            ctx.getContentResolver().unregisterContentObserver(observer);
+        listObservers.clear();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        this.unregisterObservers();
+        super.finalize();
+    }
+
+    @Override
+    public Cursor swapCursor(Cursor newCursor) {
+        this.unregisterObservers();
+        return super.swapCursor(newCursor);
     }
 }

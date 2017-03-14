@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:background="@drawable/note_background"
+    android:background="@drawable/dialog_shape"
     android:orientation="horizontal">
 
 
@@ -61,7 +61,15 @@
                         android:text="Body"
                         android:textColor="#000000"
                         android:textSize="@dimen/note_item_body_textsize" />
-
+                    <TextView
+                        android:id="@+id/timeupdated"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:text="@string/last_udpated"
+                        android:visibility="visible"></TextView>
                     <TextView
                         android:id="@+id/coords"
                         android:layout_width="wrap_content"

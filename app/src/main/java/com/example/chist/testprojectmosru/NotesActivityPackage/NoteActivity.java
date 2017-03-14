@@ -299,8 +299,8 @@ public class NoteActivity extends BaseNoteActivity {
     }
 
     @Override
-    protected void onStop() {
-        if (!noteOld.equals(noteNew)) { // equals is overrided
+    protected void onPause() {
+        if (!noteOld.checkEquals(noteNew)) {
             ContentValues values = Utils.prepareContentValues(noteNew);
             if(noteNew.x != 0)
                 values.put(DBHelper.NoteColumns.MAPX, noteNew.x);
@@ -308,7 +308,7 @@ public class NoteActivity extends BaseNoteActivity {
                 values.put(DBHelper.NoteColumns.MAPY, noteNew.y);
             helper.insertNote(values);
         }
-        super.onStop();
+        super.onPause();
     }
 
     @Override

@@ -54,9 +54,6 @@ public class MainNoteActivity extends BaseNoteActivity {
         view = (ListView) findViewById(R.id.notelist);
         adapter = new NoteAdapter(this, helper.getNotesCursor(), true);
         view.setAdapter(adapter);
-
-        registerContentObservers();
-
         view.setOnItemClickListener(createItemClickListener());
         view.setOnItemLongClickListener(createItemLongClickListener());
 
@@ -140,7 +137,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                 infoDialog.show();
                 break;
             case R.id.deletenotes:
-                Dialog dialogConfirm = new Dialogs.ConfirmDialog(this,new Runnable() {
+                Dialog dialogConfirm = new Dialogs.ConfirmDialog(this, new Runnable() {
                     @Override
                     public void run() {
                         helper.deleteAll();
@@ -165,17 +162,16 @@ public class MainNoteActivity extends BaseNoteActivity {
     protected void onStart() {
         super.onStart();
         adapter.swapCursor(helper.getNotesCursor());
-        if(observers.size() == 0)
-            registerContentObservers();
+        registerContentObservers();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        switch(requestCode) {
+        switch (requestCode) {
             case SELECT_PHOTO:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     Uri selectedImage = intent.getData();
                     InputStream imageStream = null;
                     try {
@@ -185,8 +181,8 @@ public class MainNoteActivity extends BaseNoteActivity {
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
-                    if(idNoteOnUpdate != -1) {
-                        this.getContentResolver().notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate),null);
+                    if (idNoteOnUpdate != -1) {
+                        this.getContentResolver().notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate), null);
                         idNoteOnUpdate = -1;
                     }
                     return;
@@ -203,12 +199,12 @@ public class MainNoteActivity extends BaseNoteActivity {
         return new VKCallback<VKAccessToken>() {
             @Override
             public void onResult(VKAccessToken res) {
-                Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainNoteActivity.this, "INVK", Toast.LENGTH_LONG).show();
             }
 
             @Override
             public void onError(VKError error) {
-                Toast.makeText(MainNoteActivity.this,"INVK", Toast.LENGTH_LONG).show();
+                Toast.makeText(MainNoteActivity.this, "INVK", Toast.LENGTH_LONG).show();
                 // Произошла ошибка авторизации (например, пользователь запретил авторизацию)
             }
         };

@@ -16,6 +16,7 @@
     <string name="save">Save</string>
     <string name="curplace">We are here</string>
     <string name="no_data">No gps data</string>
+    <string name="last_udpated">Last updated: </string>
     <string name="next">Next</string>
     <integer name="com_vk_sdk_AppId">5907230</integer>
     <string name="facebook_app_id">242883742840612</string>

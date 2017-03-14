@@ -1,6 +1,7 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -27,14 +28,16 @@ public class BaseNoteActivity extends AppCompatActivity {
         helper = new DBHelper(this);
         if(!helper.isOpen())
             helper.open();
+
+    }
+
+    private void registerGpsChangedObserver(Context ctx) {
         ContentObserver observer;
 
-        // Придет нотификация когда обновятся данные gps в adapter-е заметок
-        // решил не давать прямого доступа адаптеру на модификацию данных базы)
+        // Придет нотификация когда обновятся данные gps, проставим элементам эти данные (если актуально)
         getContentResolver().registerContentObserver(Utils.getGeoDataUri(this), false, observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
-                if(!helper.isOpen()) return;
                 Cursor c = helper.getNotesCursor();
                 if (c.getCount() == 0) return;
                 c.moveToFirst();
@@ -59,6 +62,7 @@ public class BaseNoteActivity extends AppCompatActivity {
         if (!helper.isOpen()) {
             helper.open();
         }
+        registerGpsChangedObserver(this);
         super.onStart();
     }
 
@@ -71,6 +75,5 @@ public class BaseNoteActivity extends AppCompatActivity {
         }
         observers.clear();
         super.onStop();
-
     }
 }

@@ -34,8 +34,15 @@ public class Note implements Cloneable{
         this.id = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID));
     }
 
-    public boolean equals(Note obj) {
-        return this.hashCode() == obj.hashCode();
+    public boolean checkEquals(Note obj) {
+        return this.header.equals(obj.header) &&
+                this.body.equals(obj.body) &&
+                this.x == obj.x &&
+                this.y == obj.y &&
+                this.timestamp == obj.timestamp &&
+                this.marker == obj.marker &&
+                this.id  == obj.id
+                ;
     }
 
     protected Object clone()  {
