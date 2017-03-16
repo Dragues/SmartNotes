@@ -24,7 +24,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public static String tableNotesName = "notetable";
 
     private SQLiteDatabase db;
-    private static Context ctx;
+    private ObserversHolder observers;
 
     public boolean isOpen() {
         return db.isOpen();
@@ -40,7 +40,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public void deleteAll() {
         db.delete(tableNotesName, null, null);
-        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+        observers.notifyChange(MainNoteActivity.noteUri, null);
         if (new File(Utils.getImagePathInDevice().getAbsolutePath()).exists()) {
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(false)); // i don't want to delete above dirs
             Utils.deleteAllFilesInDir(Utils.getImagePathInDevice(true));
@@ -90,10 +90,10 @@ public class DBHelper extends SQLiteOpenHelper {
         ID
     }
 
-    public DBHelper(Context context) {
-        super(context, dbName, null, dbVersion);
+    public DBHelper(BaseNoteActivity activity) {
+        super(activity, dbName, null, dbVersion);
         this.db = getWritableDatabase();
-        this.ctx = context;
+        observers = activity.getObservers();
     }
 
     @Override
@@ -130,7 +130,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         try {
             db.insertWithOnConflict(tableNotesName, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-            ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+            observers.notifyChange(MainNoteActivity.noteUri, null);
         } catch (Exception e) {
         } // there is error situation if will be conflict
 
@@ -142,12 +142,12 @@ public class DBHelper extends SQLiteOpenHelper {
 
     void deleteNote(String header, String body) {
         db.delete(tableNotesName, NoteColumns.HEADER + '=' + DatabaseUtils.sqlEscapeString(header) + " AND " + NoteColumns.BODY + '=' + DatabaseUtils.sqlEscapeString(body), null);
-        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+        observers.notifyChange(MainNoteActivity.noteUri, null);
     }
 
     void deleteNote(String id) {
         db.delete(tableNotesName, NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(id), null);
-        ctx.getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+        observers.notifyChange(MainNoteActivity.noteUri, null);
     }
 
     public Cursor getNotesCursor() {
