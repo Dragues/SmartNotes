@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -20,38 +19,31 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.Utils;
-import com.example.chist.testprojectmosru.NotesActivityPackage.MainNoteActivity;
+import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
 import com.example.chist.testprojectmosru.NotesActivityPackage.NoteActivity;
 import com.example.chist.testprojectmosru.R;
-import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
 
 
 /**
  * Created by 1 on 27.02.2017.
  */
 public class Dialogs {
-
     public static class AddingDialog extends Dialog {
-
-        private Context ctx;
-
         public AddingDialog(Context ctx, ContentValues values, DBHelper helper) {
             super(ctx, R.style.ContainerDialogTheme);
-            this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
             populate(values, helper);
         }
-
         private void populate(final ContentValues values, final DBHelper helper) {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_note_item, null);
             final EditText headerView = (EditText) view.findViewById(R.id.header);
             final EditText bodyView = (EditText) view.findViewById(R.id.body);
             final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
             TextView addButton = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
 
-            ((TextView)view.findViewById(R.id.dialogheader)).setText(ctx.getResources().getString(R.string.new_note));
+            ((TextView)view.findViewById(R.id.dialogheader)).setText(getContext().getResources().getString(R.string.new_note));
 
             if (values != null) {
                 if(values.containsKey(DBHelper.NoteColumns.MARKER))
@@ -86,13 +78,13 @@ public class Dialogs {
                     if (headerView.getText().toString().length() != 0 && bodyView.getText().toString().length() != 0) {
                         if(values != null && values.getAsString(DBHelper.NoteColumns.HEADER).equals(headerView.getText().toString()) &&
                                 values.getAsString(DBHelper.NoteColumns.BODY).equals(headerView.getText().toString())) {
-                            Toast.makeText(ctx, "Change data!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
                             return;
                         }
                         helper.insertNote(valuesNew);
                     }
                     else {
-                        Toast.makeText(ctx, "Change data!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     dismiss();
@@ -102,19 +94,15 @@ public class Dialogs {
     }
 
     public static class ConfirmDialog extends Dialog {
-
-        private Context ctx;
-
         public ConfirmDialog(Context ctx, Runnable runnable) {
             super(ctx, R.style.ContainerDialogTheme);
-            this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
             populate(runnable);
         }
 
         private void populate(final Runnable runnable) {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.confirm_dialog, null);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.confirm_dialog, null);
 
             TextView positive = (TextView) view.findViewById(R.id.yes);
             TextView negative = (TextView) view.findViewById(R.id.no);
@@ -137,22 +125,17 @@ public class Dialogs {
         }
     }
 
-
     // has some differences (can be optimized)
     public static class ModifyDialog extends Dialog {
-
-        private Context ctx;
-
         public ModifyDialog(Context ctx, String header, String body, int marker) {
             super(ctx, R.style.ContainerDialogTheme);
-            this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(false);
             populate(header, body, marker);
         }
 
         private void populate(final String header, final String body, int marker) {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_note_item, null);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_note_item, null);
             final EditText headerView = (EditText) view.findViewById(R.id.header);
             final EditText bodyView = (EditText) view.findViewById(R.id.body);
             final SeekBar barPriority = (SeekBar) view.findViewById(R.id.priority);
@@ -164,7 +147,7 @@ public class Dialogs {
 
             TextView modify = (TextView) view.findViewById(R.id.addbutton);
             TextView cancelButton = (TextView) view.findViewById(R.id.cancelbutton);
-            ((TextView)view.findViewById(R.id.dialogheader)).setText(ctx.getResources().getString(R.string.edit_note));
+            ((TextView)view.findViewById(R.id.dialogheader)).setText(getContext().getResources().getString(R.string.edit_note));
 
             modify.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -196,7 +179,7 @@ public class Dialogs {
                     break;
             }
             intent.putExtras(b);
-            PendingIntent pi = ((Activity) ctx).createPendingResult(requestCode, intent, 0);
+            PendingIntent pi = ((Activity) getContext()).createPendingResult(requestCode, intent, 0);
             try {
                 pi.send();
             } catch (Exception e) {
@@ -204,42 +187,33 @@ public class Dialogs {
         }
     }
 
-
     public static class ShowPhoto extends Dialog {
-
-        private Context ctx;
-
         public ShowPhoto(Context ctx, Bitmap bitmap) {
             super(ctx, R.style.ContainerDialogTheme);
-            this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(true);
             populate(bitmap);
         }
 
         private void populate(Bitmap bitmap) {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.show_photo_dialog, null);
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.show_photo_dialog, null);
             final ImageView photo = (ImageView) view.findViewById(R.id.photo);
-            Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(ctx, bitmap);
+            Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(getContext(), bitmap);
             photo.setImageBitmap(scaledBitmap);
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }
 
     public static class InfoDialog extends Dialog {
-        private Context ctx;
-
         public InfoDialog(Context ctx) {
             super(ctx, R.style.ContainerDialogTheme);
-            this.ctx = ctx;
             setCancelable(true);
             setCanceledOnTouchOutside(true);
             populate();
         }
 
         private void populate() {
-            View view = LayoutInflater.from(ctx).inflate(R.layout.app_info_dialog, null);
-
+            View view = LayoutInflater.from(getContext()).inflate(R.layout.app_info_dialog, null);
             view.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
