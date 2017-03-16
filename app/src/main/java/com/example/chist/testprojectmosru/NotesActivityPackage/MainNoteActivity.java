@@ -21,7 +21,6 @@ import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
-
 import com.facebook.FacebookSdk;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
@@ -38,7 +37,6 @@ public class MainNoteActivity extends BaseNoteActivity {
     public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.PACKAGE_NAME + "/db/notedata");
     public static final int SELECT_PHOTO = 100; // request code for photo
 
-    private ListView view;
     private int idNoteOnUpdate = -1;
     private NoteAdapter adapter;
 
@@ -51,7 +49,7 @@ public class MainNoteActivity extends BaseNoteActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
-        view = (ListView) findViewById(R.id.notelist);
+        ListView view = (ListView) findViewById(R.id.notelist);
         adapter = new NoteAdapter(this, helper.getNotesCursor(), true);
         view.setAdapter(adapter);
         view.setOnItemClickListener(createItemClickListener());
@@ -103,17 +101,6 @@ public class MainNoteActivity extends BaseNoteActivity {
         this.idNoteOnUpdate = idNoteOnUpdate;
     }
 
-    private void registerContentObservers() {
-        ContentObserver observer; // Observer for updating listView
-        getContentResolver().registerContentObserver(noteUri, false, observer = new ContentObserver(new Handler()) {
-            @Override
-            public void onChange(boolean selfChange) {
-                adapter.swapCursor(helper.getNotesCursor());
-            }
-        });
-        observers.add(observer);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.notemenu, menu);
@@ -161,8 +148,13 @@ public class MainNoteActivity extends BaseNoteActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        adapter.swapCursor(helper.getNotesCursor());
-        registerContentObservers();
+        ContentObserver observer = new ContentObserver(new Handler()) {
+            @Override
+            public void onChange(boolean selfChange) {
+                adapter.swapCursor(helper.getNotesCursor());
+            }
+        }; // Observer for updating listView
+        observers.register(noteUri, false, observer);
     }
 
     @Override
@@ -175,14 +167,14 @@ public class MainNoteActivity extends BaseNoteActivity {
                     Uri selectedImage = intent.getData();
                     InputStream imageStream = null;
                     try {
-                        imageStream = MainNoteActivity.this.getContentResolver().openInputStream(selectedImage);
+                        imageStream = observers.openInputStream(selectedImage);
                         Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
                         Utils.saveBitmap(yourSelectedImage, String.valueOf(idNoteOnUpdate));
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
                     }
                     if (idNoteOnUpdate != -1) {
-                        this.getContentResolver().notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate), null);
+                        observers.notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate), null);
                         idNoteOnUpdate = -1;
                     }
                     return;

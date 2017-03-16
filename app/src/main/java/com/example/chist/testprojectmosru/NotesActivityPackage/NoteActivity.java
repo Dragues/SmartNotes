@@ -5,17 +5,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Point;
-import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,7 +18,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
@@ -37,11 +30,6 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
-import com.facebook.share.model.ShareLinkContent;
-import com.facebook.share.model.SharePhoto;
-import com.facebook.share.model.SharePhotoContent;
-import com.facebook.share.widget.ShareDialog;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
 
@@ -100,7 +88,7 @@ public class NoteActivity extends BaseNoteActivity {
         noteOld = new Note(helper.getNote(idNote));
         noteNew = (Note)noteOld.clone();
         if(noteNew.x == 0 && noteNew.y == 0) {
-            observers.add(createContentObserver());
+            observers.register(Utils.getGeoDataUri(this), false, createContentObserver());
         }
         updateBackground(this, noteNew.marker);
         header = (TextView) findViewById(R.id.header);
@@ -205,7 +193,7 @@ public class NoteActivity extends BaseNoteActivity {
                     noteNew.x = noteOld.x = LocationHolder.getInstance(null).getLastX();
                     noteNew.y = noteOld.y = LocationHolder.getInstance(null).getLastY();
                     gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
-                    getContentResolver().unregisterContentObserver(this);
+                    observers.unregister(this);
                 }
 
             }

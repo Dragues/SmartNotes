@@ -1,18 +1,14 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
-
-import java.util.LinkedList;
 
 /**
  * Created by 1 on 03.03.2017.
@@ -20,22 +16,34 @@ import java.util.LinkedList;
 public class BaseNoteActivity extends AppCompatActivity {
 
     DBHelper helper;
-    LinkedList<ContentObserver> observers = new LinkedList<>();
+    protected ObserversHolder observers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        observers = new ObserversHolder(getContentResolver());
         helper = new DBHelper(this);
         if(!helper.isOpen())
             helper.open();
 
     }
 
-    private void registerGpsChangedObserver(Context ctx) {
-        ContentObserver observer;
+    public ObserversHolder getObservers() {
+        return observers;
+    }
 
+    @Override
+    protected void onStart() {
+        if (!helper.isOpen()) {
+            helper.open();
+        }
+        registerGpsChangedObserver();
+        super.onStart();
+    }
+
+    private void registerGpsChangedObserver() {
         // Придет нотификация когда обновятся данные gps, проставим элементам эти данные (если актуально)
-        getContentResolver().registerContentObserver(Utils.getGeoDataUri(this), false, observer = new ContentObserver(new Handler()) {
+        ContentObserver observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
                 Cursor c = helper.getNotesCursor();
@@ -53,27 +61,15 @@ public class BaseNoteActivity extends AppCompatActivity {
                 }
                 while (c.moveToNext());
             }
-        });
-        observers.add(observer);
-    }
-
-    @Override
-    protected void onStart() {
-        if (!helper.isOpen()) {
-            helper.open();
-        }
-        registerGpsChangedObserver(this);
-        super.onStart();
+        };
+        observers.register(Utils.getGeoDataUri(this), false, observer);
     }
 
     @Override
     protected void onStop() {
         if (helper.isOpen())
             helper.close();
-        for (ContentObserver item : observers) {
-            getContentResolver().unregisterContentObserver(item);
-        }
-        observers.clear();
+        observers.unregisterAll();
         super.onStop();
     }
 }
