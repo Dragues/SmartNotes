@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TabHost;
 import android.widget.Toast;
 
 import com.example.chist.testprojectmosru.Application.LaunchApplication;
@@ -40,6 +41,7 @@ public class MainNoteActivity extends BaseNoteActivity {
     private int idNoteOnUpdate = -1;
     private NoteAdapter adapter;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,12 +52,44 @@ public class MainNoteActivity extends BaseNoteActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
         ListView view = (ListView) findViewById(R.id.notelist);
-        adapter = new NoteAdapter(this, helper.getNotesCursor(), true);
+        adapter = new NoteAdapter(this, helper.getNotesCursor(DBHelper.Order.ALPHABETHEADER), true);
         view.setAdapter(adapter);
         view.setOnItemClickListener(createItemClickListener());
         view.setOnItemLongClickListener(createItemLongClickListener());
 
         findViewById(R.id.addnote).setOnClickListener(createNoteOnClickListener());
+
+        prepareTabs();
+    }
+
+    private void prepareTabs() {
+        TabHost tabHost = (TabHost) findViewById(R.id.tabHost);
+        tabHost.setup();
+
+        TabHost.TabSpec tabSpec = tabHost.newTabSpec("alph");
+        tabSpec.setContent(R.id.alphabet);
+        tabSpec.setIndicator(getString(R.string.alphabet));
+        tabHost.addTab(tabSpec);
+
+        tabSpec = tabHost.newTabSpec("time");
+        tabSpec.setContent(R.id.time);
+        tabSpec.setIndicator(getString(R.string.time));
+        tabHost.addTab(tabSpec);
+
+        // tabListener
+        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            public void onTabChanged(String tabId) {
+                switch (tabId) {
+                    case "alph":
+                        adapter.swapCursor(helper.getNotesCursor(DBHelper.Order.ALPHABETHEADER));
+                        break;
+                    case "time":
+                        adapter.swapCursor(helper.getNotesCursor(DBHelper.Order.TIME));
+                        break;
+                }
+            }
+        });
+        tabHost.setCurrentTab(0);
     }
 
     @NonNull
@@ -174,7 +208,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                         e.printStackTrace();
                     }
                     if (idNoteOnUpdate != -1) {
-                        observers.notifyChange(Utils.getImageUri(getApplication(), idNoteOnUpdate), null);
+                        adapter.getObservers().notifyChange(Utils.getImageUri(MainNoteActivity.this, idNoteOnUpdate), null);
                         idNoteOnUpdate = -1;
                     }
                     return;
@@ -201,7 +235,6 @@ public class MainNoteActivity extends BaseNoteActivity {
             }
         };
     }
-
 
     int getMyId() {
         final VKAccessToken vkAccessToken = VKAccessToken.currentToken();

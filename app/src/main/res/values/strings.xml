@@ -30,6 +30,8 @@
     <string name="info">Info</string>
     <string name="edit">edit</string>
     <string name="export">export</string>
+    <string name="alphabet">Alphabetically</string>
+    <string name="time">Time</string>
 
 
 </resources>

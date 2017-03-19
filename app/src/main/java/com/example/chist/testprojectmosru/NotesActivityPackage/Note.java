@@ -41,8 +41,7 @@ public class Note implements Cloneable{
                 this.y == obj.y &&
                 this.timestamp == obj.timestamp &&
                 this.marker == obj.marker &&
-                this.id  == obj.id
-                ;
+                this.id  == obj.id;
     }
 
     protected Object clone()  {

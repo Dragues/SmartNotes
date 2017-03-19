@@ -198,8 +198,8 @@ public class Dialogs {
         private void populate(Bitmap bitmap) {
             View view = LayoutInflater.from(getContext()).inflate(R.layout.show_photo_dialog, null);
             final ImageView photo = (ImageView) view.findViewById(R.id.photo);
-            Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(getContext(), bitmap);
-            photo.setImageBitmap(scaledBitmap);
+            //Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(getContext(), bitmap);
+            photo.setImageBitmap(bitmap);
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }

@@ -24,6 +24,7 @@ import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
 
+import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
@@ -43,7 +44,12 @@ import java.util.TimeZone;
  */
 // In this task i want to use CursorAdapter
 public class NoteAdapter extends CursorAdapter {
-    private ObserversHolder observers;
+
+    private ObserversHolder observers; // localObserver for adapter
+
+    public ObserversHolder getObservers() {
+        return observers;
+    }
 
     protected static class ViewHolder {
         protected TextView header;
@@ -57,7 +63,7 @@ public class NoteAdapter extends CursorAdapter {
 
     public NoteAdapter(BaseNoteActivity activity, Cursor c, boolean autoRequery) {
         super(activity, c, autoRequery);
-        observers = activity.getObservers();
+        observers = new ObserversHolder(activity.getContentResolver());
     }
 
     @Override
@@ -103,8 +109,9 @@ public class NoteAdapter extends CursorAdapter {
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),
                     R.drawable.no_data));
         }
-        ContentObserver observer = createImageContentObserver(context, holder);
+        ContentObserver observer = createImageContentObserver(LaunchApplication.getInstance(), holder);
         observers.register(holder.imageUri, false, observer);
+
 
         //TIME
         holder.timeupdated.setText(context.getResources().getString(R.string.last_udpated) + getDateFromMillis(time));
@@ -161,6 +168,12 @@ public class NoteAdapter extends CursorAdapter {
         };
     }
 
+    @Override
+    public Cursor swapCursor(Cursor newCursor) {
+        //observers.unregisterAll();
+        return super.swapCursor(newCursor);
+    }
+
     @NonNull
     private ContentObserver createImageContentObserver(final Context context, final ViewHolder holder) {
         return new ContentObserver(new Handler()) {
@@ -168,10 +181,11 @@ public class NoteAdapter extends CursorAdapter {
             public void onChange(boolean selfChange) {
                 Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
                 if (bitmap != null) {
-                    holder.photo.setImageBitmap(bitmap);
+                    //holder.photo.setImageBitmap(bitmap);
+                    holder.photo.setImageBitmap(null);
                     Picasso.with(context)
-                            .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + holder.id))
-                            .transform(new CropTransformation(Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2))
+                            .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
+                            .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
                             .into(holder.photo);
                 } else
                     holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),

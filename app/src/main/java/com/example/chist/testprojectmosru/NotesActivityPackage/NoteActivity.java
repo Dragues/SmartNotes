@@ -44,15 +44,6 @@ import java.util.Map;
  * Created by 1 on 28.02.2017.
  */
 public class NoteActivity extends BaseNoteActivity {
-    private static final String AUTHURL = "https://api.instagram.com/oauth/authorize/";
-    //Used for Authentication.
-    private static final String TOKENURL ="https://api.instagram.com/oauth/access_token/";
-    //Used for getting token and User details.
-    public static final String APIURL = "https://api.instagram.com/v1/";
-    //Used to specify the API version which we are going to use.
-    public static String CALLBACKURL = "Your Redirect URI";
-    //The callback url that we have used while registering the application.
-
     public static String HEADERTAG = "RESULT_HEADER";
     public static String BODYTAG = "RESULT_BODY";
     public static String MARKERTAG = "RESULT_MARKER";
@@ -71,7 +62,6 @@ public class NoteActivity extends BaseNoteActivity {
     // facebook info after login
     private long idFacebookUser;
     private String nameUser;
-
 
     private static String[] sMyScope = new String[]{VKScope.FRIENDS, VKScope.WALL, VKScope.PHOTOS, VKScope.NOHTTPS};
 

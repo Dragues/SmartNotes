@@ -38,6 +38,14 @@ public class LaunchApplication extends Application implements Application.Activi
     private static boolean isActivityVisible;
     private LocationHolder locationHolder;
 
+    private static LaunchApplication _instance;
+    {
+        _instance = this;
+    }
+    public static LaunchApplication getInstance() {
+        return _instance;
+    }
+
     public boolean isActivityVisible() {
         return isActivityVisible;
     }
@@ -146,5 +154,9 @@ public class LaunchApplication extends Application implements Application.Activi
             result = "STRANGE PLACE";
         }
         return result;
+    }
+
+    public Context getAppContext() {
+        return getApplicationContext();
     }
 }

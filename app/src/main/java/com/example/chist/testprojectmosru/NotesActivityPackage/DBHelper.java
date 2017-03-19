@@ -59,21 +59,6 @@ public class DBHelper extends SQLiteOpenHelper {
         return null;
     }
 
-    public Cursor query(String selection, Order order) {
-        String orderBy = null;
-        if (order != null)
-            switch (order) {
-                case ALPHABETHEADER:
-                    orderBy = NoteColumns.HEADER + " COLLATE NOCASE ASC";
-                    break;
-                case ID:
-                    orderBy = NoteColumns.ID + " ASC";
-                    break;
-            }
-
-        Cursor c = db.query(tableNotesName, null, selection, null, null, null, orderBy);
-        return c;
-    }
 
     public interface NoteColumns {
         String ID = "_id";
@@ -87,6 +72,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public enum Order {
         ALPHABETHEADER,
+        TIME,
         ID
     }
 
@@ -148,6 +134,31 @@ public class DBHelper extends SQLiteOpenHelper {
     void deleteNote(String id) {
         db.delete(tableNotesName, NoteColumns.ID + '=' + DatabaseUtils.sqlEscapeString(id), null);
         observers.notifyChange(MainNoteActivity.noteUri, null);
+    }
+
+    public Cursor getNotesCursor(Order order) {
+        Cursor c = query(null, order);
+        c.moveToFirst();
+        return c;
+    }
+
+    public Cursor query(String selection, Order order) {
+        String orderBy = null;
+        if (order != null)
+            switch (order) {
+                case ALPHABETHEADER:
+                    orderBy = NoteColumns.HEADER + " COLLATE NOCASE ASC";
+                    break;
+                case TIME:
+                    orderBy = NoteColumns.TIME + " DESC";
+                    break;
+                case ID:
+                    orderBy = NoteColumns.ID + " ASC";
+                    break;
+            }
+
+        Cursor c = db.query(tableNotesName, null, selection, null, null, null, orderBy);
+        return c;
     }
 
     public Cursor getNotesCursor() {
