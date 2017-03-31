@@ -75,6 +75,7 @@ public class NoteAdapter extends CursorAdapter {
         holder.photo = (ImageView) view.findViewById(R.id.photo);
         holder.coords = (TextView) view.findViewById(R.id.coords);
         holder.timeupdated = (TextView) view.findViewById(R.id.timeupdated);
+
         view.setTag(holder);
         return view;
     }
@@ -100,18 +101,17 @@ public class NoteAdapter extends CursorAdapter {
         holder.photo.setOnClickListener(new LoadImageListener(holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if (bitmap != null) {
-            //holder.photo.setImageBitmap(bitmap);
-            Picasso.with(context)
-                    .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
-                    .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
-                    .into(holder.photo);
+            holder.photo.setImageBitmap(bitmap);
+//            Picasso.with(context)
+//                    .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
+//                    .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
+//                    .into(holder.photo);
         } else {
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),
                     R.drawable.no_data));
         }
         ContentObserver observer = createImageContentObserver(LaunchApplication.getInstance(), holder);
         observers.register(holder.imageUri, false, observer);
-
 
         //TIME
         holder.timeupdated.setText(context.getResources().getString(R.string.last_udpated) + getDateFromMillis(time));
@@ -170,7 +170,7 @@ public class NoteAdapter extends CursorAdapter {
 
     @Override
     public Cursor swapCursor(Cursor newCursor) {
-        //observers.unregisterAll();
+        observers.unregisterAll();
         return super.swapCursor(newCursor);
     }
 
@@ -181,12 +181,11 @@ public class NoteAdapter extends CursorAdapter {
             public void onChange(boolean selfChange) {
                 Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
                 if (bitmap != null) {
-                    //holder.photo.setImageBitmap(bitmap);
-                    holder.photo.setImageBitmap(null);
-                    Picasso.with(context)
-                            .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
-                            .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
-                            .into(holder.photo);
+                    holder.photo.setImageBitmap(bitmap);
+//                    Picasso.with(context)
+//                            .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
+//                            .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
+//                            .into(holder.photo);
                 } else
                     holder.photo.setImageBitmap(BitmapFactory.decodeResource(context.getResources(),
                             R.drawable.no_data));
