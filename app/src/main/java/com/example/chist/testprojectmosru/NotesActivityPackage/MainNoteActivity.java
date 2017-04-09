@@ -3,7 +3,6 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 import android.app.Dialog;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -22,6 +21,8 @@ import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
+import com.example.chist.testprojectmosru.data.NoteDetails;
 import com.facebook.FacebookSdk;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
@@ -30,6 +31,11 @@ import com.vk.sdk.api.VKError;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -37,25 +43,36 @@ import java.io.InputStream;
 public class MainNoteActivity extends BaseNoteActivity {
     public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.PACKAGE_NAME + "/db/notedata");
     public static final int SELECT_PHOTO = 100; // request code for photo
+    public static String NOTETAG = "notetag"; // tag for sending serializable for NoteActivity
 
     private int idNoteOnUpdate = -1;
     private NoteAdapter adapter;
-
+    private ListView list;
+    private TabHost tabHost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         if (!FacebookSdk.isInitialized())
             FacebookSdk.sdkInitialize(getApplicationContext());
+
         setContentView(R.layout.firstlvllayout);
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
-        ListView view = (ListView) findViewById(R.id.notelist);
-        adapter = new NoteAdapter(this, helper.getNotesCursor(DBHelper.Order.ALPHABETHEADER), true);
-        view.setAdapter(adapter);
-        view.setOnItemClickListener(createItemClickListener());
-        view.setOnItemLongClickListener(createItemLongClickListener());
+        list = (ListView) findViewById(R.id.notelist);
+        ArrayList<NoteDetails> notesList = new ArrayList<NoteDetails>();
+        try {
+            notesList.addAll(helper.getNoteDao().queryForAll());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        adapter = new NoteAdapter(this, notesList);
+        list.setAdapter(adapter);
+        list.setOnItemClickListener(createItemClickListener());
+        list.setOnItemLongClickListener(createItemLongClickListener());
 
         findViewById(R.id.addnote).setOnClickListener(createNoteOnClickListener());
 
@@ -63,7 +80,7 @@ public class MainNoteActivity extends BaseNoteActivity {
     }
 
     private void prepareTabs() {
-        TabHost tabHost = (TabHost) findViewById(R.id.tabHost);
+        tabHost = (TabHost) findViewById(R.id.tabHost);
         tabHost.setup();
 
         TabHost.TabSpec tabSpec = tabHost.newTabSpec("alph");
@@ -79,14 +96,23 @@ public class MainNoteActivity extends BaseNoteActivity {
         // tabListener
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
+                adapter.clear();
+                List<NoteDetails> details = null;
+                try {
+                    details = helper.getNoteDao().queryForAll();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 switch (tabId) {
                     case "alph":
-                        adapter.swapCursor(helper.getNotesCursor(DBHelper.Order.ALPHABETHEADER));
+                        Collections.sort(details, new OrderComparator(DatabaseHelper.Order.ALPHABETHEADER));
                         break;
                     case "time":
-                        adapter.swapCursor(helper.getNotesCursor(DBHelper.Order.TIME));
+                        Collections.sort(details, new OrderComparator(DatabaseHelper.Order.TIME));
                         break;
                 }
+                adapter.addAll(details);
+                adapter.notifyDataSetChanged();
             }
         });
         tabHost.setCurrentTab(0);
@@ -109,10 +135,10 @@ public class MainNoteActivity extends BaseNoteActivity {
         return new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor c = (Cursor) adapter.getItem(position);
-                helper.deleteNote(c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)),
-                        c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
-                Utils.deletesCachedImages(MainNoteActivity.this, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)) + "");
+                NoteDetails details = adapter.getItem(position);
+                helper.deleteNote(details);
+                updateNoteList();
+                Utils.deletesCachedImages(MainNoteActivity.this, details.id + "");
                 return true;
             }
         };
@@ -123,9 +149,9 @@ public class MainNoteActivity extends BaseNoteActivity {
         return new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor c = (Cursor) adapter.getItem(position);
+                NoteDetails details = adapter.getItem(position);
                 Intent i = new Intent(MainNoteActivity.this, NoteActivity.class);
-                i.putExtra(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
+                i.putExtra(NOTETAG, details);
                 startActivity(i);
             }
         };
@@ -161,7 +187,8 @@ public class MainNoteActivity extends BaseNoteActivity {
                 Dialog dialogConfirm = new Dialogs.ConfirmDialog(this, new Runnable() {
                     @Override
                     public void run() {
-                        helper.deleteAll();
+                        helper.deleteNotes();
+                        observers.notifyChange(MainNoteActivity.noteUri, null);
                     }
                 });
                 dialogConfirm.setCancelable(true);
@@ -185,10 +212,42 @@ public class MainNoteActivity extends BaseNoteActivity {
         ContentObserver observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
-                adapter.swapCursor(helper.getNotesCursor());
+                updateNoteList();
             }
         }; // Observer for updating listView
         observers.register(noteUri, false, observer);
+        updateNoteList();
+    }
+
+    private void updateNoteList() {
+        try {
+            List<NoteDetails> details = helper.getNoteDao().queryForAll();
+            adapter.clear();
+            Collections.sort(details, new OrderComparator(DatabaseHelper.Order.ALPHABETHEADER));
+            adapter.addAll(details);
+            adapter.notifyDataSetChanged();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public class OrderComparator implements Comparator<NoteDetails> {
+        DatabaseHelper.Order order;
+
+        public OrderComparator(DatabaseHelper.Order order) {
+            this.order = order;
+        }
+
+        @Override
+        public int compare(NoteDetails o1, NoteDetails o2) {
+            switch (order) {
+                case ALPHABETHEADER:
+                    return o1.header.compareTo(o2.header);
+                case TIME:
+                    return o1.timestamp < (o2.timestamp) ? -1 : 1;
+            }
+            return 0;
+        }
     }
 
     @Override

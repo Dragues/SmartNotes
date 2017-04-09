@@ -23,6 +23,8 @@ import com.example.chist.testprojectmosru.Application.SocialUtils;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
+import com.example.chist.testprojectmosru.data.NoteDetails;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
@@ -36,6 +38,7 @@ import com.vk.sdk.VKSdk;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,10 +57,10 @@ public class NoteActivity extends BaseNoteActivity {
     private TextView header, body, gps;
     private int idNote;
 
-    private Note noteOld;
-    private Note noteNew;
+    private NoteDetails noteOld;
+    private NoteDetails noteNew;
 
-    public CallbackManager manager;
+    public CallbackManager manager; // facebook
 
     // facebook info after login
     private long idFacebookUser;
@@ -74,9 +77,10 @@ public class NoteActivity extends BaseNoteActivity {
         getSupportActionBar().setTitle(getString(R.string.viewer_note));
 
         manager = CallbackManager.Factory.create();
-        idNote = getIntent().getExtras().getInt(DBHelper.NoteColumns.ID);
-        noteOld = new Note(helper.getNote(idNote));
-        noteNew = (Note)noteOld.clone();
+        NoteDetails details = (NoteDetails)getIntent().getExtras().getSerializable(MainNoteActivity.NOTETAG);
+        idNote = details.id;
+        noteOld = details;
+        noteNew = (NoteDetails)noteOld.clone();
         if(noteNew.x == 0 && noteNew.y == 0) {
             observers.register(Utils.getGeoDataUri(this), false, createContentObserver());
         }
@@ -122,9 +126,9 @@ public class NoteActivity extends BaseNoteActivity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(NoteActivity.this, MapChangerActivity.class);
-                i.putExtra(DBHelper.NoteColumns.ID, idNote);
-                i.putExtra(DBHelper.NoteColumns.MAPX, noteNew.x == 0 ? 55.751244 : noteNew.x); // set default Moskow
-                i.putExtra(DBHelper.NoteColumns.MAPY, noteNew.y  == 0 ? 37.618423 : noteNew.y);
+                i.putExtra(DatabaseHelper.NoteColumns.ID, idNote);
+                i.putExtra(DatabaseHelper.NoteColumns.MAPX, noteNew.x == 0 ? 55.751244 : noteNew.x); // set default Moskow
+                i.putExtra(DatabaseHelper.NoteColumns.MAPY, noteNew.y  == 0 ? 37.618423 : noteNew.y);
                 startActivity(i);
             }
         };
@@ -206,7 +210,7 @@ public class NoteActivity extends BaseNoteActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.edit:
-                Dialog modifyDialog = new Dialogs.ModifyDialog(this, noteNew.header, noteNew.body, noteNew.marker);
+                Dialog modifyDialog = new Dialogs.AddingDialog(this, noteNew, helper);
                 modifyDialog.setCancelable(true);
                 modifyDialog.show();
                 break;
@@ -220,8 +224,7 @@ public class NoteActivity extends BaseNoteActivity {
                 gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                 break;
             case R.id.deletenotes:
-                DBHelper helper = new DBHelper(this);
-                helper.deleteNote(String.valueOf(noteOld.id));
+                helper.deleteNote(noteOld);
                 helper.close();
                 finish();
                 break;
@@ -251,16 +254,15 @@ public class NoteActivity extends BaseNoteActivity {
     private void processPendingIntent(Map.Entry<Integer, Intent> entry) {
         switch (entry.getKey()) {
             case requestCodeUpdateData: // update data after modify
-                noteNew.header = entry.getValue().getStringExtra(HEADERTAG);
-                noteNew.body = entry.getValue().getStringExtra(BODYTAG);
-                noteNew.marker = entry.getValue().getIntExtra(MARKERTAG, 0);
+                NoteDetails details = (NoteDetails)entry.getValue().getSerializableExtra(HEADERTAG);
+                noteNew = details;
                 header.setText(noteNew.header);
                 body.setText(noteNew.body);
                 updateBackground(this,  noteNew.marker);
                 break;
             case requestCodeUpdateGPS: // update data after modify
-                double x = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPX, noteNew.x);
-                double y = entry.getValue().getDoubleExtra(DBHelper.NoteColumns.MAPY, noteNew.y);
+                double x = entry.getValue().getDoubleExtra(DatabaseHelper.NoteColumns.MAPX, noteNew.x);
+                double y = entry.getValue().getDoubleExtra(DatabaseHelper.NoteColumns.MAPY, noteNew.y);
                 if (x != noteNew.x || y != noteNew.y) {
                     noteNew.x = x;
                     noteNew.y = y;
@@ -279,12 +281,11 @@ public class NoteActivity extends BaseNoteActivity {
     @Override
     protected void onPause() {
         if (!noteOld.checkEquals(noteNew)) {
-            ContentValues values = Utils.prepareContentValues(noteNew);
-            if(noteNew.x != 0)
-                values.put(DBHelper.NoteColumns.MAPX, noteNew.x);
-            if(noteNew.y != 0)
-                values.put(DBHelper.NoteColumns.MAPY, noteNew.y);
-            helper.insertNote(values);
+            try {
+                helper.getNoteDao().createOrUpdate(noteNew);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         super.onPause();
     }

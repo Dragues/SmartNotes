@@ -9,23 +9,27 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
+import com.example.chist.testprojectmosru.data.NoteDetails;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.Dao;
+
+import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by 1 on 03.03.2017.
  */
 public class BaseNoteActivity extends AppCompatActivity {
 
-    DBHelper helper;
+    DatabaseHelper helper = null;
     protected ObserversHolder observers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         observers = new ObserversHolder(getContentResolver());
-        helper = new DBHelper(this);
-        if(!helper.isOpen())
-            helper.open();
-
+        helper = getHelper();
     }
 
     public ObserversHolder getObservers() {
@@ -34,10 +38,8 @@ public class BaseNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        if (!helper.isOpen()) {
-            helper.open();
-        }
         registerGpsChangedObserver();
+        getHelper();
         super.onStart();
     }
 
@@ -46,20 +48,26 @@ public class BaseNoteActivity extends AppCompatActivity {
         ContentObserver observer = new ContentObserver(new Handler()) {
             @Override
             public void onChange(boolean selfChange) {
-                Cursor c = helper.getNotesCursor();
-                if (c.getCount() == 0) return;
-                c.moveToFirst();
-                do {
-                    long time = c.getLong(c.getColumnIndex(DBHelper.NoteColumns.TIME));
-                    boolean emptyGps = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)) + c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)) == 0;
-                    if (emptyGps && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
-                        ContentValues values = Utils.getContentValuesFromCursor(c);
-                        values.put(DBHelper.NoteColumns.MAPX, LocationHolder.getInstance(null).getLastX());
-                        values.put(DBHelper.NoteColumns.MAPY, LocationHolder.getInstance(null).getLastY());
-                        helper.insertNote(values);
+
+                try {
+                    Dao<NoteDetails, Integer>  noteDao =  getHelper().getNoteDao();
+                    List<NoteDetails> listNotes = noteDao.queryForAll();
+                    if (listNotes.size() == 0) return;
+
+                    for ( NoteDetails details : listNotes) {
+                        long time = details.timestamp;
+                        boolean emptyGps = details.x + details.y == 0;
+                        if (emptyGps && System.currentTimeMillis() - time < LocationHolder.validDeltaTime) {
+                            details.x = LocationHolder.getInstance(null).getLastX();
+                            details.x = LocationHolder.getInstance(null).getLastY();
+                            noteDao.createOrUpdate(details);
+                        }
                     }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 }
-                while (c.moveToNext());
+
             }
         };
         observers.register(Utils.getGeoDataUri(this), false, observer);
@@ -67,9 +75,32 @@ public class BaseNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        if (helper.isOpen())
-            helper.close();
+        if (helper != null) {
+            OpenHelperManager.releaseHelper();
+            helper = null;
+        }
         observers.unregisterAll();
         super.onStop();
+    }
+
+    // This is how, DatabaseHelper can be initialized for future use
+    private DatabaseHelper getHelper() {
+        if (helper == null) {
+            helper = OpenHelperManager.getHelper(BaseNoteActivity.this, DatabaseHelper.class);
+        }
+        return helper;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+		/*
+		 * You'll need this in your class to release the helper when done.
+		 */
+        if (helper != null) {
+            OpenHelperManager.releaseHelper();
+            helper = null;
+        }
     }
 }

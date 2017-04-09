@@ -2,6 +2,8 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.database.Cursor;
 
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
+
 /**
  * Created by 1 on 04.03.2017.
  */
@@ -25,13 +27,13 @@ public class Note implements Cloneable{
     }
 
     public Note(Cursor c) {
-        this.header = c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER));
-        this.body = c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY));
-        this.marker = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER));
-        this.x =  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX));
-        this.y =  c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY));
-        this.timestamp = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.TIME));
-        this.id = c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID));
+        this.header = c.getString(c.getColumnIndex(DatabaseHelper.NoteColumns.HEADER));
+        this.body = c.getString(c.getColumnIndex(DatabaseHelper.NoteColumns.BODY));
+        this.marker = c.getInt(c.getColumnIndex(DatabaseHelper.NoteColumns.MARKER));
+        this.x =  c.getDouble(c.getColumnIndex(DatabaseHelper.NoteColumns.MAPX));
+        this.y =  c.getDouble(c.getColumnIndex(DatabaseHelper.NoteColumns.MAPY));
+        this.timestamp = c.getInt(c.getColumnIndex(DatabaseHelper.NoteColumns.TIME));
+        this.id = c.getInt(c.getColumnIndex(DatabaseHelper.NoteColumns.ID));
     }
 
     public boolean checkEquals(Note obj) {

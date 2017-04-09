@@ -1,0 +1,32 @@
+# --table-start--
+dataClass=com.example.chist.testprojectmosru.data.NoteDetails
+tableName=notetable
+# --table-fields-start--
+# --field-start--
+fieldName=id
+columnName=_id
+generatedId=true
+# --field-end--
+# --field-start--
+fieldName=header
+columnName=headerNote
+# --field-end--
+# --field-start--
+fieldName=body
+columnName=textNote
+# --field-end--
+# --field-start--
+fieldName=x
+columnName=mapx
+# --field-end--
+# --field-start--
+fieldName=y
+columnName=mapy
+# --field-end--
+# --field-start--
+fieldName=timestamp
+columnName=time
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################

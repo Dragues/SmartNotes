@@ -7,7 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.widget.Toast;
 
-import com.example.chist.testprojectmosru.NotesActivityPackage.Note;
+import com.example.chist.testprojectmosru.data.NoteDetails;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
@@ -24,7 +24,7 @@ import com.vk.sdk.dialogs.VKShareDialogBuilder;
  */
 public class SocialUtils {
 
-    public static void shareWithDialog(final Context ctx, final Bitmap bitmap, Note noteNew, FragmentManager fragmentManager) {
+    public static void shareWithDialog(final Context ctx, final Bitmap bitmap, NoteDetails noteNew, FragmentManager fragmentManager) {
         VKShareDialog builder = new VKShareDialog();
         String postResult = "Header note: " + noteNew.header + "\n" +
                 "Description: " + noteNew.body;
@@ -68,7 +68,7 @@ public class SocialUtils {
         };
     }
 
-    public static void shareWithFaceBookDialog(final Context ctx, final Bitmap bitmap, Note noteNew) {
+    public static void shareWithFaceBookDialog(final Context ctx, final Bitmap bitmap, NoteDetails noteNew) {
         SharePhoto photo = new SharePhoto.Builder()
                 .setBitmap(bitmap)
                 .build();

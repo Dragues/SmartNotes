@@ -15,9 +15,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.chist.testprojectmosru.NotesActivityPackage.DBHelper;
-import com.example.chist.testprojectmosru.NotesActivityPackage.Note;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.vk.sdk.VKAccessToken;
 
 import java.io.BufferedWriter;
@@ -201,12 +200,12 @@ public class Utils {
     public static ContentValues prepareContentValues(int id, String header, String body, int marker) {
         ContentValues values = new ContentValues();
         if (id != -1)
-            values.put(DBHelper.NoteColumns.ID, id);
+            values.put(DatabaseHelper.NoteColumns.ID, id);
         if (header != null)
-            values.put(DBHelper.NoteColumns.HEADER, header);
+            values.put(DatabaseHelper.NoteColumns.HEADER, header);
         if (body != null)
-            values.put(DBHelper.NoteColumns.BODY, body);
-        values.put(DBHelper.NoteColumns.MARKER, marker);
+            values.put(DatabaseHelper.NoteColumns.BODY, body);
+        values.put(DatabaseHelper.NoteColumns.MARKER, marker);
         return values;
     }
 
@@ -238,30 +237,6 @@ public class Utils {
 
     public static Uri getGeoDataUri(Context context) {
         return Uri.parse("content://" + context.getPackageName() + "/geo");
-    }
-
-    public static ContentValues prepareContentValues(Note noteNew) {
-        ContentValues values = new ContentValues();
-        values.put(DBHelper.NoteColumns.ID, noteNew.id);
-        values.put(DBHelper.NoteColumns.HEADER, noteNew.header);
-        values.put(DBHelper.NoteColumns.MARKER, noteNew.marker);
-        values.put(DBHelper.NoteColumns.BODY, noteNew.body);
-        values.put(DBHelper.NoteColumns.MAPX, noteNew.x);
-        values.put(DBHelper.NoteColumns.MAPY, noteNew.y);
-        return values;
-    }
-
-    // get values from cursor
-    public static ContentValues getContentValuesFromCursor(Cursor c) {
-        ContentValues cv = new ContentValues();
-        cv.put(DBHelper.NoteColumns.HEADER, c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER)));
-        cv.put(DBHelper.NoteColumns.BODY, c.getString(c.getColumnIndex(DBHelper.NoteColumns.BODY)));
-        cv.put(DBHelper.NoteColumns.MARKER, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.MARKER)));
-        cv.put(DBHelper.NoteColumns.TIME, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.TIME)));
-        cv.put(DBHelper.NoteColumns.MAPX, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX)));
-        cv.put(DBHelper.NoteColumns.MAPY, c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY)));
-        cv.put(DBHelper.NoteColumns.ID, c.getInt(c.getColumnIndex(DBHelper.NoteColumns.ID)));
-        return cv;
     }
 
     public static int getID() {

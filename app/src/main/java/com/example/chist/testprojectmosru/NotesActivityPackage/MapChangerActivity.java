@@ -6,7 +6,6 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.view.MenuItem;
@@ -15,6 +14,8 @@ import android.widget.Button;
 
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
+import com.example.chist.testprojectmosru.data.NoteDetails;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -24,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class MapChangerActivity extends BaseNoteActivity {
@@ -35,22 +37,23 @@ public class MapChangerActivity extends BaseNoteActivity {
     private Marker curMarker;
     private Button saveBut;
     private boolean onSave;
-    private ArrayList<LatLng> listLoc = new ArrayList<>();
+    private ArrayList<NoteDetails> notes = new ArrayList<>();
     private double x = 55.751244; // default Moscow
     private double y = 37.618423;
-    private boolean launchMode;
+    private boolean showMode;
     private Button nextFocus;
     private int curIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.map_layout);
         getSupportActionBar().setTitle(getResources().getString(R.string.map));
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        launchMode = getIntent().getBooleanExtra(LAUNCHMODETAG, false);
+        showMode = getIntent().getBooleanExtra(LAUNCHMODETAG, false);
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         map = mapFragment.getMap();
@@ -61,15 +64,13 @@ public class MapChangerActivity extends BaseNoteActivity {
         saveBut = (Button)findViewById(R.id.savebutton);
         nextFocus = (Button)findViewById(R.id.nextmarker);
 
-        if(launchMode) {
-            doInLaunchMode();
-        }
-        else {
-            doWithoutLaunchMode();
-        }
+        if(showMode)
+            doInShowMode();
+        else
+            doInSetMode();
     }
 
-    private void doWithoutLaunchMode() {
+    private void doInSetMode() {
         nextFocus.setVisibility(View.GONE);
         saveBut.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,8 +81,8 @@ public class MapChangerActivity extends BaseNoteActivity {
             }
         });
 
-        x = getIntent().getDoubleExtra(DBHelper.NoteColumns.MAPX, 0);
-        y = getIntent().getDoubleExtra(DBHelper.NoteColumns.MAPY, 0);
+        x = getIntent().getDoubleExtra(DatabaseHelper.NoteColumns.MAPX, 0);
+        y = getIntent().getDoubleExtra(DatabaseHelper.NoteColumns.MAPY, 0);
 
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(x, y))
@@ -98,7 +99,7 @@ public class MapChangerActivity extends BaseNoteActivity {
         map.setOnMapClickListener(createOnMapClickListener());
     }
 
-    private void doInLaunchMode() {
+    private void doInShowMode() {
         saveBut.setVisibility(View.GONE);
         CameraPosition cameraPosition = new CameraPosition.Builder()
                 .target(new LatLng(55.751244, 37.618423))
@@ -109,9 +110,9 @@ public class MapChangerActivity extends BaseNoteActivity {
         CameraUpdate cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
         map.animateCamera(cameraUpdate);
         moveCursorToFirstIfNeed();
-        if (listLoc.size() > 0) {
+        if (notes.size() > 0) {
             cameraPosition = new CameraPosition.Builder()
-                    .target(listLoc.get(0))
+                    .target(new LatLng(notes.get(0).x, notes.get(0).y))
                     .zoom(15)
                     .bearing(45)
                     .tilt(20)
@@ -119,7 +120,7 @@ public class MapChangerActivity extends BaseNoteActivity {
             cameraUpdate = CameraUpdateFactory.newCameraPosition(cameraPosition);
             map.animateCamera(cameraUpdate);
         }
-        if(listLoc.size() < 2)
+        if(notes.size() < 2)
             nextFocus.setVisibility(View.GONE);
         else {
             nextFocus.setOnClickListener(createNextFocusOnClickListener());
@@ -127,18 +128,15 @@ public class MapChangerActivity extends BaseNoteActivity {
     }
 
     private void moveCursorToFirstIfNeed() {
-        Cursor c = helper.getNotesCursor();
-        if(c.moveToFirst()){
-            do {
-                double x = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPX));
-                double y = c.getDouble(c.getColumnIndex(DBHelper.NoteColumns.MAPY));
-                String header = c.getString(c.getColumnIndex(DBHelper.NoteColumns.HEADER));
+        try {
+            notes.addAll(helper.getNoteDao().queryForAll());
+            for( NoteDetails details : notes) {
                 map.addMarker(new MarkerOptions()
-                        .position(new LatLng(x, y))
-                        .title(header));
-                listLoc.add(new LatLng(x,y));
+                        .position(new LatLng(details.x, details.y))
+                        .title(details.header));
             }
-            while (c.moveToNext());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -165,12 +163,12 @@ public class MapChangerActivity extends BaseNoteActivity {
             @Override
             public void onClick(View v) {
                 LatLng purpose = new LatLng(0,0);
-                if (curIndex == listLoc.size()-1) {
-                    purpose =   listLoc.get(0);
+                if (curIndex == notes.size()-1) {
+                    purpose =   new LatLng(notes.get(0).x, notes.get(0).y);
                     curIndex = 0;
                 }
                 else {
-                    purpose = listLoc.get(curIndex+1);
+                    purpose = new LatLng(notes.get(curIndex + 1).x, notes.get(curIndex + 1).y);
                     curIndex += 1;
                 }
                 CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -189,8 +187,8 @@ public class MapChangerActivity extends BaseNoteActivity {
     private void sendPendingUpdateGPS(double x, double y) {
         Intent intent = new Intent("ANYTHINGTITLE" + "_" + System.currentTimeMillis()); // intents can be cached (it's may occur the errors), name can be anything
         Bundle b = new Bundle();
-        b.putDouble(DBHelper.NoteColumns.MAPX, x);
-        b.putDouble(DBHelper.NoteColumns.MAPY, y);
+        b.putDouble(DatabaseHelper.NoteColumns.MAPX, x);
+        b.putDouble(DatabaseHelper.NoteColumns.MAPY, y);
         intent.putExtras(b);
         PendingIntent pi = (createPendingResult(NoteActivity.requestCodeUpdateGPS, intent, 0));
         try {
