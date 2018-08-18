@@ -32,6 +32,15 @@
     <string name="export">export</string>
     <string name="alphabet">Alphabetically</string>
     <string name="time">Time</string>
+    <string name="permission_dialog_yes">настройки</string>
+    <string name="permission_dialog_no">продолжить</string>
+    <string name="storage_permission_error">Приложение не смогло получить доступ к памяти устройства</string>
+    <string name="turn_on_permission">Пожалуйста, проверьте в настройках что у приложение есть необходимые права</string>
+    <string name="turn_on_permission_camera">Приложеню требуется доступ к камере</string>
+    <string name="turn_on_permission_contacts">Приложеню требуется доступ к контактам</string>
+    <string name="turn_on_permission_storage">Приложению требуется доступ к локальному хранилищу, чтобы сохранять данные</string>
+    <string name="perm_storage_success">Разрешение для работы с изображениями дано</string>
+    <string name="perm_storage_error">Разрешение для работы с изображениями отклонено</string>
 
 
 </resources>

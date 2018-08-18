@@ -1,5 +1,6 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -29,6 +30,7 @@ import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKError;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -40,7 +42,7 @@ import java.util.List;
 /**
  * Created by 1 on 27.02.2017.
  */
-public class MainNoteActivity extends BaseNoteActivity {
+public class MainNoteActivity extends BaseActivity {
     public static final Uri noteUri = Uri.parse("content://" + LaunchApplication.PACKAGE_NAME + "/db/notedata");
     public static final int SELECT_PHOTO = 100; // request code for photo
     public static String NOTETAG = "notetag"; // tag for sending serializable for NoteActivity
@@ -64,7 +66,7 @@ public class MainNoteActivity extends BaseNoteActivity {
         list = (ListView) findViewById(R.id.notelist);
         ArrayList<NoteDetails> notesList = new ArrayList<NoteDetails>();
         try {
-            notesList.addAll(helper.getNoteDao().queryForAll());
+            notesList.addAll(DatabaseHelper.getInstance().getNoteDao().queryForAll());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -77,6 +79,17 @@ public class MainNoteActivity extends BaseNoteActivity {
         findViewById(R.id.addnote).setOnClickListener(createNoteOnClickListener());
 
         prepareTabs();
+    }
+
+    private void checkPermission(PermissionActivity.PermissionHandler handler) {
+        try {
+            BaseActivity activity = (BaseActivity) LaunchApplication.getInstance().getCurrentActivity();
+            activity.requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, handler);
+        } catch (Exception ex) {
+            //Timber.d(ex, "Exception while checking permissions");
+            //Crashlytics.logException(new Error("can't request permissions", ex));
+            handler.onPermissionDenied();
+        }
     }
 
     private void prepareTabs() {
@@ -99,7 +112,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                 adapter.clear();
                 List<NoteDetails> details = null;
                 try {
-                    details = helper.getNoteDao().queryForAll();
+                    details = DatabaseHelper.getInstance().getNoteDao().queryForAll();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -123,7 +136,7 @@ public class MainNoteActivity extends BaseNoteActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Dialog addingDialog = new Dialogs.AddingDialog(MainNoteActivity.this, null, helper);
+                Dialog addingDialog = new Dialogs.AddingDialog(MainNoteActivity.this, null);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
             }
@@ -136,7 +149,6 @@ public class MainNoteActivity extends BaseNoteActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                 NoteDetails details = adapter.getItem(position);
-                helper.deleteNote(details);
                 updateNoteList();
                 Utils.deletesCachedImages(MainNoteActivity.this, details.id + "");
                 return true;
@@ -174,7 +186,7 @@ public class MainNoteActivity extends BaseNoteActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add_note:
-                Dialog addingDialog = new Dialogs.AddingDialog(this, null, helper);
+                Dialog addingDialog = new Dialogs.AddingDialog(this, null);
                 addingDialog.setCancelable(true);
                 addingDialog.show();
                 break;
@@ -187,7 +199,7 @@ public class MainNoteActivity extends BaseNoteActivity {
                 Dialog dialogConfirm = new Dialogs.ConfirmDialog(this, new Runnable() {
                     @Override
                     public void run() {
-                        helper.deleteNotes();
+                        DatabaseHelper.getInstance().deleteNotes();
                         observers.notifyChange(MainNoteActivity.noteUri, null);
                     }
                 });
@@ -217,11 +229,22 @@ public class MainNoteActivity extends BaseNoteActivity {
         }; // Observer for updating listView
         observers.register(noteUri, false, observer);
         updateNoteList();
+        checkPermission(new PermissionActivity.PermissionHandler() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(MainNoteActivity.this, R.string.perm_storage_success, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onPermissionDenied() { // start app without loading custom book
+                Toast.makeText(MainNoteActivity.this, R.string.perm_storage_error, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void updateNoteList() {
         try {
-            List<NoteDetails> details = helper.getNoteDao().queryForAll();
+            List<NoteDetails> details = DatabaseHelper.getInstance().getNoteDao().queryForAll();
             adapter.clear();
             Collections.sort(details, new OrderComparator(DatabaseHelper.Order.ALPHABETHEADER));
             adapter.addAll(details);

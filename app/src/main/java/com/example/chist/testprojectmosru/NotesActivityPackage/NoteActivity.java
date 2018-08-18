@@ -1,7 +1,6 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Dialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
@@ -46,7 +45,7 @@ import java.util.Map;
 /**
  * Created by 1 on 28.02.2017.
  */
-public class NoteActivity extends BaseNoteActivity {
+public class NoteActivity extends BaseActivity {
     public static String HEADERTAG = "RESULT_HEADER";
     public static String BODYTAG = "RESULT_BODY";
     public static String MARKERTAG = "RESULT_MARKER";
@@ -210,7 +209,7 @@ public class NoteActivity extends BaseNoteActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.edit:
-                Dialog modifyDialog = new Dialogs.AddingDialog(this, noteNew, helper);
+                Dialog modifyDialog = new Dialogs.AddingDialog(this, noteNew);
                 modifyDialog.setCancelable(true);
                 modifyDialog.show();
                 break;
@@ -224,8 +223,7 @@ public class NoteActivity extends BaseNoteActivity {
                 gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
                 break;
             case R.id.deletenotes:
-                helper.deleteNote(noteOld);
-                helper.close();
+                DatabaseHelper.getInstance().deleteNote(noteOld);
                 finish();
                 break;
             case android.R.id.home:
@@ -279,18 +277,6 @@ public class NoteActivity extends BaseNoteActivity {
     }
 
     @Override
-    protected void onPause() {
-        if (!noteOld.checkEquals(noteNew)) {
-            try {
-                helper.getNoteDao().createOrUpdate(noteNew);
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-        super.onPause();
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
         if (LocationHolder.onGPSUpdate != null) {
@@ -299,6 +285,18 @@ public class NoteActivity extends BaseNoteActivity {
             gps.setText("X: " + noteNew.x + "\n" + "Y: " + noteNew.y);
             LocationHolder.onGPSUpdate = null;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        if (!noteOld.checkEquals(noteNew)) {
+            try {
+                DatabaseHelper.getInstance().getNoteDao().createOrUpdate(noteNew);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        super.onStop();
     }
 
     /*

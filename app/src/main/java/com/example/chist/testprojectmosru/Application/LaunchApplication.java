@@ -13,6 +13,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 
@@ -33,6 +34,7 @@ import java.util.Locale;
  */
 public class LaunchApplication extends Application implements Application.ActivityLifecycleCallbacks, LocationListener{
 
+    private AppCompatActivity mCurrentActivity = null;
     public static final String APP_PREFERENCES = "global_prefs";
     public static String PACKAGE_NAME;
     private static boolean isActivityVisible;
@@ -158,5 +160,13 @@ public class LaunchApplication extends Application implements Application.Activi
 
     public Context getAppContext() {
         return getApplicationContext();
+    }
+
+    public AppCompatActivity getCurrentActivity() {
+        return mCurrentActivity;
+    }
+
+    public void setCurrentActivity(AppCompatActivity mCurrentActivity) {
+        this.mCurrentActivity = mCurrentActivity;
     }
 }

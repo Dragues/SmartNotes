@@ -28,7 +28,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class MapChangerActivity extends BaseNoteActivity {
+public class MapChangerActivity extends BaseActivity {
     public static String SEPARATOR = "&";
     public static String LAUNCHMODETAG = "launch_tag";
 
@@ -129,7 +129,7 @@ public class MapChangerActivity extends BaseNoteActivity {
 
     private void moveCursorToFirstIfNeed() {
         try {
-            notes.addAll(helper.getNoteDao().queryForAll());
+            notes.addAll(DatabaseHelper.getInstance().getNoteDao().queryForAll());
             for( NoteDetails details : notes) {
                 map.addMarker(new MarkerOptions()
                         .position(new LatLng(details.x, details.y))

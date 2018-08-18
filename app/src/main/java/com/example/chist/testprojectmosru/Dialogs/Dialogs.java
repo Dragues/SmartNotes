@@ -34,14 +34,14 @@ import java.util.Date;
  */
 public class Dialogs {
     public static class AddingDialog extends Dialog {
-        public AddingDialog(Context ctx, NoteDetails noteDetails, DatabaseHelper helper) {
+        public AddingDialog(Context ctx, NoteDetails noteDetails) {
             super(ctx, R.style.ContainerDialogTheme);
             setCancelable(true);
             setCanceledOnTouchOutside(false);
-            populate(ctx, noteDetails == null ? new NoteDetails() : noteDetails, helper);
+            populate(ctx, noteDetails == null ? new NoteDetails() : noteDetails);
         }
 
-        private void populate(Context ctx, final NoteDetails noteDetails, final DatabaseHelper helper) {
+        private void populate(Context ctx, final NoteDetails noteDetails) {
             View view = LayoutInflater.from(getContext()).inflate(R.layout.dialog_note_item, null);
             final EditText headerView = (EditText) view.findViewById(R.id.header);
             final EditText bodyView = (EditText) view.findViewById(R.id.body);
@@ -54,7 +54,7 @@ public class Dialogs {
             headerView.setText(noteDetails.header);
             bodyView.setText(noteDetails.body);
 
-            addButton.setOnClickListener(createAddButtonOnClickListener(ctx, noteDetails, helper, headerView, bodyView, barPriority));
+            addButton.setOnClickListener(createAddButtonOnClickListener(ctx, noteDetails, headerView, bodyView, barPriority));
             cancelButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -65,7 +65,7 @@ public class Dialogs {
         }
 
         @NonNull
-        private View.OnClickListener createAddButtonOnClickListener(final Context ctx, final NoteDetails noteDetails, final DatabaseHelper helper, final EditText headerView, final EditText bodyView, final SeekBar barPriority) {
+        private View.OnClickListener createAddButtonOnClickListener(final Context ctx, final NoteDetails noteDetails, final EditText headerView, final EditText bodyView, final SeekBar barPriority) {
             return new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -82,14 +82,14 @@ public class Dialogs {
 
                     if (noteDetails.header.length() != 0 && noteDetails.body.length() != 0) {
                         if (ctx instanceof NoteActivity) {
-                            sendSerialPendingRequestByCode(ctx,NoteActivity.requestCodeUpdateData, noteDetails);
+                            sendSerialPendingRequestByCode(ctx, NoteActivity.requestCodeUpdateData, noteDetails);
                             dismiss();
                             return;
                         }
                         try {
-                            final Dao<NoteDetails, Integer> noteDao = helper.getNoteDao();
+                            final Dao<NoteDetails, Integer> noteDao = DatabaseHelper.getInstance().getNoteDao();
                             noteDao.createOrUpdate(noteDetails);
-                            ((Activity)ctx).getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
+                            ((Activity) ctx).getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
                         } catch (SQLException e) {
                             e.printStackTrace();
                         }

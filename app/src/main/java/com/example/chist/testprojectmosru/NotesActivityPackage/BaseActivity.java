@@ -1,5 +1,6 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.database.ContentObserver;
 import android.database.Cursor;
@@ -7,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 
+import com.example.chist.testprojectmosru.Application.LaunchApplication;
 import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
@@ -20,16 +22,17 @@ import java.util.List;
 /**
  * Created by 1 on 03.03.2017.
  */
-public class BaseNoteActivity extends AppCompatActivity {
+public class BaseActivity extends PermissionActivity {
 
-    DatabaseHelper helper = null;
+    protected LaunchApplication mApp;
+    private boolean mIsVisible;
     protected ObserversHolder observers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mApp = (LaunchApplication) this.getApplicationContext();
         observers = new ObserversHolder(getContentResolver());
-        helper = getHelper();
     }
 
     public ObserversHolder getObservers() {
@@ -38,9 +41,9 @@ public class BaseNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        registerGpsChangedObserver();
-        getHelper();
         super.onStart();
+        registerGpsChangedObserver();
+        mApp.setCurrentActivity(this);
     }
 
     private void registerGpsChangedObserver() {
@@ -50,7 +53,7 @@ public class BaseNoteActivity extends AppCompatActivity {
             public void onChange(boolean selfChange) {
 
                 try {
-                    Dao<NoteDetails, Integer>  noteDao =  getHelper().getNoteDao();
+                    Dao<NoteDetails, Integer>  noteDao =  DatabaseHelper.getInstance().getNoteDao();
                     List<NoteDetails> listNotes = noteDao.queryForAll();
                     if (listNotes.size() == 0) return;
 
@@ -75,32 +78,18 @@ public class BaseNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        if (helper != null) {
-            OpenHelperManager.releaseHelper();
-            helper = null;
-        }
+        clearReferences();
         observers.unregisterAll();
         super.onStop();
     }
 
-    // This is how, DatabaseHelper can be initialized for future use
-    private DatabaseHelper getHelper() {
-        if (helper == null) {
-            helper = OpenHelperManager.getHelper(BaseNoteActivity.this, DatabaseHelper.class);
-        }
-        return helper;
+    private void clearReferences() {
+        Activity currActivity = mApp.getCurrentActivity();
+        if (currActivity != null && this.equals(currActivity))
+            mApp.setCurrentActivity(null);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-		/*
-		 * You'll need this in your class to release the helper when done.
-		 */
-        if (helper != null) {
-            OpenHelperManager.releaseHelper();
-            helper = null;
-        }
+    protected boolean isVisible() {
+        return mIsVisible;
     }
 }

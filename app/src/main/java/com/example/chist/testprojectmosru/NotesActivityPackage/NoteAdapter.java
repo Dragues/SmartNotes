@@ -5,7 +5,6 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -28,12 +27,14 @@ import com.example.chist.testprojectmosru.Application.LocationHolder;
 import com.example.chist.testprojectmosru.Application.Utils;
 import com.example.chist.testprojectmosru.Dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
+import com.example.chist.testprojectmosru.picasso.CropTransformation;
+import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
@@ -61,7 +62,7 @@ public class NoteAdapter extends ArrayAdapter<NoteDetails> {
         private TextView timeupdated;
     }
 
-    public NoteAdapter(BaseNoteActivity activity, List<NoteDetails> notes) {
+    public NoteAdapter(BaseActivity activity, List<NoteDetails> notes) {
         super(activity, R.layout.note_item, notes);
         this.inflater = activity.getLayoutInflater();
         observers = new ObserversHolder(activity.getContentResolver());
@@ -101,11 +102,11 @@ public class NoteAdapter extends ArrayAdapter<NoteDetails> {
         holder.photo.setOnClickListener(new LoadImageListener(holder.id));
         Bitmap bitmap = Utils.getSavedBitmap(holder.id, false);
         if (bitmap != null) {
-            holder.photo.setImageBitmap(bitmap);
-//            Picasso.with(context)
-//                    .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
-//                    .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
-//                    .into(holder.photo);
+            //holder.photo.setImageBitmap(bitmap);
+            Picasso.with(getContext())
+                    .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + holder.id))
+                    .transform(new CropTransformation((int) (Math.min(bitmap.getHeight(), bitmap.getWidth()) / 2)))
+                    .into(holder.photo);
         } else {
             holder.photo.setImageBitmap(BitmapFactory.decodeResource(LaunchApplication.getInstance().getResources(),
                     R.drawable.no_data));
@@ -233,8 +234,8 @@ public class NoteAdapter extends ArrayAdapter<NoteDetails> {
     }
 
     private void runEdit(Context context, int idNote) {
-        NoteDetails details = ((MainNoteActivity) context).helper.getNote(idNote);
-        Dialog dialog = new Dialogs.AddingDialog(context, details, ((MainNoteActivity) context).helper);
+        NoteDetails details = DatabaseHelper.getInstance().getNote(idNote);
+        Dialog dialog = new Dialogs.AddingDialog(context, details);
         dialog.setCancelable(true);
         dialog.show();
     }
