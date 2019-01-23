@@ -1,19 +1,15 @@
 package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.app.Activity;
-import android.content.ContentValues;
 import android.database.ContentObserver;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
-import com.example.chist.testprojectmosru.Application.LocationHolder;
-import com.example.chist.testprojectmosru.Application.Utils;
+import com.example.chist.testprojectmosru.application.LaunchApplication;
+import com.example.chist.testprojectmosru.application.LocationHolder;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
-import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.example.chist.testprojectmosru.db.NoteDao;
 import com.j256.ormlite.dao.Dao;
 
 import java.sql.SQLException;
@@ -26,17 +22,11 @@ public class BaseActivity extends PermissionActivity {
 
     protected LaunchApplication mApp;
     private boolean mIsVisible;
-    protected ObserversHolder observers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mApp = (LaunchApplication) this.getApplicationContext();
-        observers = new ObserversHolder(getContentResolver());
-    }
-
-    public ObserversHolder getObservers() {
-        return observers;
     }
 
     @Override
@@ -53,7 +43,7 @@ public class BaseActivity extends PermissionActivity {
             public void onChange(boolean selfChange) {
 
                 try {
-                    Dao<NoteDetails, Integer>  noteDao =  DatabaseHelper.getInstance().getNoteDao();
+                    NoteDao noteDao =  DatabaseHelper.getInstance().getNoteDao();
                     List<NoteDetails> listNotes = noteDao.queryForAll();
                     if (listNotes.size() == 0) return;
 
@@ -73,13 +63,11 @@ public class BaseActivity extends PermissionActivity {
 
             }
         };
-        observers.register(Utils.getGeoDataUri(this), false, observer);
     }
 
     @Override
     protected void onStop() {
         clearReferences();
-        observers.unregisterAll();
         super.onStop();
     }
 

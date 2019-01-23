@@ -1,4 +1,4 @@
-package com.example.chist.testprojectmosru.Application;
+package com.example.chist.testprojectmosru.application;
 
 import android.app.Activity;
 import android.content.ContentValues;
@@ -9,8 +9,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.location.Address;
 import android.location.Geocoder;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
@@ -26,8 +30,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by 1 on 28.02.2017.
@@ -169,9 +177,8 @@ public class Utils {
         File file = new File(smallImagePath, header);
         if (file.exists()) file.delete();
         try {
-            Bitmap resizeBitMap = needCrop ? Bitmap.createScaledBitmap(bitmap, 120, 120, false) : bitmap;
             FileOutputStream out = new FileOutputStream(file);
-            resizeBitMap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, needCrop ? 60 : 100, out);
             out.flush();
             out.close();
 
@@ -194,19 +201,6 @@ public class Utils {
             e.printStackTrace();
         }
         return bitmap;
-    }
-
-    // Prepare Base Columns
-    public static ContentValues prepareContentValues(int id, String header, String body, int marker) {
-        ContentValues values = new ContentValues();
-        if (id != -1)
-            values.put(DatabaseHelper.NoteColumns.ID, id);
-        if (header != null)
-            values.put(DatabaseHelper.NoteColumns.HEADER, header);
-        if (body != null)
-            values.put(DatabaseHelper.NoteColumns.BODY, body);
-        values.put(DatabaseHelper.NoteColumns.MARKER, marker);
-        return values;
     }
 
     // Firstly i use the id-field for identify note from sqlite. It wasn't good idea.
@@ -273,19 +267,94 @@ public class Utils {
     }
 
     // Dangerous method
-    public static String getAddressFromCoords(Context ctx, int latitude, int longitude){
+    public static String getAddressFromCoords(Context ctx, int latitude, int longitude) {
         Geocoder geocoder = new Geocoder(ctx, Locale.getDefault());
-        List<Address> addresses  = null;
+        List<Address> addresses = null;
         try {
-            addresses = geocoder.getFromLocation(latitude,longitude, 1);
+            addresses = geocoder.getFromLocation(latitude, longitude, 1);
             String city = addresses.get(0).getLocality();
             String state = addresses.get(0).getAdminArea();
             String zip = addresses.get(0).getPostalCode();
             String country = addresses.get(0).getCountryName();
-            return state + ", " +zip + ", " +  city + ", " + country;
+            return state + ", " + zip + ", " + city + ", " + country;
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static void runUi(Runnable run) {
+        new Handler(Looper.getMainLooper()).post(run);
+    }
+
+    public static String getDateFromMillis(long time) {
+        //1322018752992-Nov 22, 2011 9:25:52 PM
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+        GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("US/Central"));
+        calendar.setTimeInMillis(time);
+        return sdf.format(calendar.getTime());
+    }
+
+    public static Bitmap getCorrectlyOrientedImage(Context context, Uri photoUri) throws IOException {
+        InputStream is = context.getContentResolver().openInputStream(photoUri);
+        BitmapFactory.Options dbo = new BitmapFactory.Options();
+        dbo.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(is, null, dbo);
+        is.close();
+
+        int rotatedWidth, rotatedHeight;
+        int orientation = getOrientation(context, photoUri);
+
+        if (orientation == 90 || orientation == 270) {
+            rotatedWidth = dbo.outHeight;
+            rotatedHeight = dbo.outWidth;
+        } else {
+            rotatedWidth = dbo.outWidth;
+            rotatedHeight = dbo.outHeight;
+        }
+
+        Bitmap srcBitmap;
+        is = context.getContentResolver().openInputStream(photoUri);
+        int MAX_IMAGE_DIMENSION = (int)context.getResources().getDimension(R.dimen.max_bitmap_height);
+        if (rotatedWidth > MAX_IMAGE_DIMENSION || rotatedHeight > MAX_IMAGE_DIMENSION) {
+            float widthRatio = ((float) rotatedWidth) / ((float) MAX_IMAGE_DIMENSION);
+            float heightRatio = ((float) rotatedHeight) / ((float) MAX_IMAGE_DIMENSION);
+            float maxRatio = Math.max(widthRatio, heightRatio);
+
+            // Create the bitmap from file
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inSampleSize = (int) maxRatio;
+            srcBitmap = BitmapFactory.decodeStream(is, null, options);
+        } else {
+            srcBitmap = BitmapFactory.decodeStream(is);
+        }
+        is.close();
+
+        /*
+         * if the orientation is not 0 (or -1, which means we don't know), we
+         * have to do a rotation.
+         */
+        if (orientation > 0) {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(orientation);
+
+            srcBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(),
+                    srcBitmap.getHeight(), matrix, true);
+        }
+
+        return srcBitmap;
+    }
+
+    public static int getOrientation(Context context, Uri photoUri) {
+        /* it's on the external media. */
+        Cursor cursor = context.getContentResolver().query(photoUri,
+                new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
+
+        if (cursor.getCount() != 1) {
+            return -1;
+        }
+
+        cursor.moveToFirst();
+        return cursor.getInt(0);
     }
 }

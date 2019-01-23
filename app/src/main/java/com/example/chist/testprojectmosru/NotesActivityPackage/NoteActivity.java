@@ -17,10 +17,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.chist.testprojectmosru.Application.LocationHolder;
-import com.example.chist.testprojectmosru.Application.SocialUtils;
-import com.example.chist.testprojectmosru.Application.Utils;
-import com.example.chist.testprojectmosru.Dialogs.Dialogs;
+import com.example.chist.testprojectmosru.application.LocationHolder;
+import com.example.chist.testprojectmosru.application.SocialUtils;
+import com.example.chist.testprojectmosru.application.Utils;
+import com.example.chist.testprojectmosru.dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
@@ -80,9 +80,6 @@ public class NoteActivity extends BaseActivity {
         idNote = details.id;
         noteOld = details;
         noteNew = (NoteDetails)noteOld.clone();
-        if(noteNew.x == 0 && noteNew.y == 0) {
-            observers.register(Utils.getGeoDataUri(this), false, createContentObserver());
-        }
         updateBackground(this, noteNew.marker);
         header = (TextView) findViewById(R.id.header);
         header.setText(noteNew.header);
@@ -92,6 +89,7 @@ public class NoteActivity extends BaseActivity {
         changeLocation.setOnClickListener(createLocationOnClickListener());
         fillGps();
         fillPhoto();
+
         ImageView facebook = (ImageView) findViewById(R.id.facebook);
         facebook.setOnClickListener(createFacebookOnClickListener());
         ImageView vk = (ImageView) findViewById(R.id.vk);
@@ -172,23 +170,6 @@ public class NoteActivity extends BaseActivity {
                 Dialog showDialog = new Dialogs.ShowPhoto(NoteActivity.this, bitmap);
                 showDialog.setCancelable(true);
                 showDialog.show();
-            }
-        };
-    }
-
-    @NonNull
-    private ContentObserver createContentObserver() {
-        return new ContentObserver(new Handler()) {
-            @Override
-            public void onChange(boolean selfChange) {
-                // Если данные свежие то добавляю последние с GPS
-                if (Math.abs(noteNew.timestamp - LocationHolder.getInstance(null).getLastTimeUpdate()) < LocationHolder.validDeltaTime) {
-                    noteNew.x = noteOld.x = LocationHolder.getInstance(null).getLastX();
-                    noteNew.y = noteOld.y = LocationHolder.getInstance(null).getLastY();
-                    gps.setText("X: " + noteNew.x + "\n" + "Y: "  + noteNew.y);
-                    observers.unregister(this);
-                }
-
             }
         };
     }

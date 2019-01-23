@@ -1,12 +1,9 @@
-package com.example.chist.testprojectmosru.Application;
+package com.example.chist.testprojectmosru.application;
 
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -14,18 +11,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Base64;
-import android.util.Log;
 
 
 import com.facebook.FacebookSdk;
+import com.facebook.stetho.Stetho;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.util.VKUtil;
 
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -92,6 +85,10 @@ public class LaunchApplication extends Application implements Application.Activi
         VKSdk.initialize(getApplicationContext());
         FacebookSdk.sdkInitialize(getApplicationContext());
         String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
+
+        if (true) {
+            Stetho.initializeWithDefaults(this);
+        }
     }
 
     @Override

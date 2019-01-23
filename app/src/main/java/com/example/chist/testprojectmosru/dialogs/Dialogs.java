@@ -1,9 +1,8 @@
-package com.example.chist.testprojectmosru.Dialogs;
+package com.example.chist.testprojectmosru.dialogs;
 
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.PendingIntent;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -23,10 +22,10 @@ import com.example.chist.testprojectmosru.NotesActivityPackage.NoteActivity;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
+import com.example.chist.testprojectmosru.db.NoteDao;
 import com.j256.ormlite.dao.Dao;
 
 import java.sql.SQLException;
-import java.util.Date;
 
 
 /**
@@ -66,39 +65,37 @@ public class Dialogs {
 
         @NonNull
         private View.OnClickListener createAddButtonOnClickListener(final Context ctx, final NoteDetails noteDetails, final EditText headerView, final EditText bodyView, final SeekBar barPriority) {
-            return new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (noteDetails.header.equals(headerView.getText().toString()) &&
-                            noteDetails.body.equals(headerView.getText().toString())) {
-                        Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    noteDetails.header = headerView.getText().toString().trim();
-                    noteDetails.body = bodyView.getText().toString().trim();
-                    noteDetails.marker = barPriority.getProgress();
-                    noteDetails.timestamp = System.currentTimeMillis();
-
-                    if (noteDetails.header.length() != 0 && noteDetails.body.length() != 0) {
-                        if (ctx instanceof NoteActivity) {
-                            sendSerialPendingRequestByCode(ctx, NoteActivity.requestCodeUpdateData, noteDetails);
-                            dismiss();
-                            return;
-                        }
-                        try {
-                            final Dao<NoteDetails, Integer> noteDao = DatabaseHelper.getInstance().getNoteDao();
-                            noteDao.createOrUpdate(noteDetails);
-                            ((Activity) ctx).getContentResolver().notifyChange(MainNoteActivity.noteUri, null);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    } else {
-                        Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    dismiss();
+            return v -> {
+                if (noteDetails.header.equals(headerView.getText().toString()) &&
+                        noteDetails.body.equals(headerView.getText().toString())) {
+                    Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                noteDetails.header = headerView.getText().toString().trim();
+                noteDetails.body = bodyView.getText().toString().trim();
+                noteDetails.marker = barPriority.getProgress();
+                noteDetails.timestamp = System.currentTimeMillis();
+
+                if (noteDetails.header.length() != 0 && noteDetails.body.length() != 0) {
+                    if (ctx instanceof NoteActivity) {
+                        sendSerialPendingRequestByCode(ctx, NoteActivity.requestCodeUpdateData, noteDetails);
+                        dismiss();
+                        return;
+                    }
+                    try {
+                        final NoteDao noteDao = DatabaseHelper.getInstance().getNoteDao();
+                        noteDao.createOrUpdate(noteDetails);
+                        if (ctx instanceof MainNoteActivity)
+                            ((MainNoteActivity) ctx).refresh();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Change data!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                dismiss();
             };
         }
 
@@ -133,20 +130,12 @@ public class Dialogs {
             TextView positive = (TextView) view.findViewById(R.id.yes);
             TextView negative = (TextView) view.findViewById(R.id.no);
 
-            positive.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    runnable.run();
-                    dismiss();
-                }
+            positive.setOnClickListener(v -> {
+                runnable.run();
+                dismiss();
             });
 
-            negative.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            negative.setOnClickListener(v -> dismiss());
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }
@@ -227,7 +216,6 @@ public class Dialogs {
         private void populate(Bitmap bitmap) {
             View view = LayoutInflater.from(getContext()).inflate(R.layout.show_photo_dialog, null);
             final ImageView photo = (ImageView) view.findViewById(R.id.photo);
-            //Bitmap scaledBitmap = Utils.getScaledBitMapBaseOnScreenSize(getContext(), bitmap);
             photo.setImageBitmap(bitmap);
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
@@ -243,12 +231,7 @@ public class Dialogs {
 
         private void populate() {
             View view = LayoutInflater.from(getContext()).inflate(R.layout.app_info_dialog, null);
-            view.findViewById(R.id.ok).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            view.findViewById(R.id.ok).setOnClickListener(v -> dismiss());
             setContentView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         }
     }

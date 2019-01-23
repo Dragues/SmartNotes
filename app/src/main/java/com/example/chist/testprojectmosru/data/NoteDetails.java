@@ -1,13 +1,18 @@
 package com.example.chist.testprojectmosru.data;
 
+import com.example.chist.testprojectmosru.db.NoteDao;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
 import java.io.Serializable;
 
 /**
  * Created by 1 on 04.03.2017.
  */
+@DatabaseTable(tableName = NoteDetails.TABLE_NAME, daoClass = NoteDao.class)
 public class NoteDetails implements Serializable, Cloneable{
 
+    public static final String TABLE_NAME = "NoteDetails";
     /**
      *  Model class for teacher_details database table
      */

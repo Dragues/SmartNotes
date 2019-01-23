@@ -1,16 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:background="@drawable/dialog_shape"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content"
+    android:background="@color/bg_color"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal"
+    android:paddingLeft="@dimen/card_padding"
+    android:paddingRight="@dimen/card_padding">
 
-
-    <LinearLayout
-        android:id="@+id/internatnoteview"
+    <android.support.v7.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="140dp"
-        android:orientation="vertical">
+        android:layout_height="@dimen/note_item_height"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginRight="12dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="3dp">
 
         <LinearLayout
             android:layout_width="fill_parent"
@@ -38,9 +45,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
+                    android:layout_marginTop="10dp"
                     android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:layout_marginTop="10dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/header"
@@ -61,6 +68,7 @@
                         android:text="Body"
                         android:textColor="#000000"
                         android:textSize="@dimen/note_item_body_textsize" />
+
                     <TextView
                         android:id="@+id/timeupdated"
                         android:layout_width="wrap_content"
@@ -70,6 +78,7 @@
                         android:orientation="horizontal"
                         android:text="@string/last_udpated"
                         android:visibility="visible"></TextView>
+
                     <TextView
                         android:id="@+id/coords"
                         android:layout_width="wrap_content"
@@ -89,18 +98,16 @@
                 android:orientation="vertical">
 
                 <ImageView
-                    android:id="@+id/popup"
+                    android:id="@+id/popup_actions_view"
                     android:layout_width="@dimen/note_item_subicons"
                     android:layout_height="@dimen/note_item_subicons"
-                    android:layout_marginRight="10dp"
                     android:layout_marginTop="10dp"
+                    android:layout_marginRight="10dp"
                     android:background="@drawable/ic_action_overflow" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-
-    </LinearLayout>
-
+    </android.support.v7.widget.CardView>
 </LinearLayout>

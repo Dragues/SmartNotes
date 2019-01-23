@@ -4,8 +4,10 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
+import com.example.chist.testprojectmosru.NotesActivityPackage.Note;
+import com.example.chist.testprojectmosru.application.LaunchApplication;
 import com.example.chist.testprojectmosru.R;
+import com.example.chist.testprojectmosru.db.NoteDao;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
@@ -45,7 +47,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     private static final String DATABASE_NAME = "notes_db.db";
     private static final int DATABASE_VERSION = 1;
 
-    private Dao<NoteDetails, Integer> noteDao;
+    private NoteDao noteDao;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION, R.raw.ormlite_config);
@@ -92,9 +94,13 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 
     // Create the getDao methods of all database tables to access those from android code.
     // Insert, delete, read, update everything will be happened through DAOs
-    public Dao<NoteDetails, Integer> getNoteDao() throws SQLException {
+    public NoteDao getNoteDao()  {
         if (noteDao == null) {
-            noteDao = getDao(NoteDetails.class);
+            try {
+                noteDao = getDao(NoteDetails.class);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
         return noteDao;
     }
@@ -132,8 +138,12 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
         }
     }
 
-//    public void notifyChange(Uri noteUri) {
-//        observers.notifyChange(MainNoteActivity.noteUri, null);
-//    }
+    public <T> void clearTable(Class<T> dataClass) {
+        try {
+            TableUtils.clearTable(connectionSource, dataClass);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
 

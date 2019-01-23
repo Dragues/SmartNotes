@@ -2,25 +2,30 @@ package com.example.chist.testprojectmosru.NotesActivityPackage;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.app.MediaRouteButton;
 import android.content.Intent;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.TabHost;
 import android.widget.Toast;
 
-import com.example.chist.testprojectmosru.Application.LaunchApplication;
-import com.example.chist.testprojectmosru.Application.Utils;
-import com.example.chist.testprojectmosru.Dialogs.Dialogs;
+import com.example.chist.testprojectmosru.application.LaunchApplication;
+import com.example.chist.testprojectmosru.application.NotesManager;
+import com.example.chist.testprojectmosru.application.Utils;
+import com.example.chist.testprojectmosru.dialogs.Dialogs;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
@@ -30,7 +35,6 @@ import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.api.VKError;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -38,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import timber.log.Timber;
 
 /**
  * Created by 1 on 27.02.2017.
@@ -49,8 +55,13 @@ public class MainNoteActivity extends BaseActivity {
 
     private int idNoteOnUpdate = -1;
     private NoteAdapter adapter;
-    private ListView list;
+    private RecyclerView list;
     private TabHost tabHost;
+    private NotesManager.NoteDelegate noteDelegate;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private boolean isLoading;
+    private ArrayList<NoteDetails> notesList;
+    private View emptyView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,22 +74,47 @@ public class MainNoteActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         getSupportActionBar().setDisplayShowHomeEnabled(false);
 
-        list = (ListView) findViewById(R.id.notelist);
-        ArrayList<NoteDetails> notesList = new ArrayList<NoteDetails>();
+        list = (RecyclerView) findViewById(R.id.notelist);
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeLayout);
+        mSwipeRefreshLayout.setRefreshing(false);
+        emptyView = findViewById(R.id.no_notes_view);
+        mSwipeRefreshLayout.setOnRefreshListener(() -> refresh());
+        notesList = new ArrayList<NoteDetails>();
         try {
             notesList.addAll(DatabaseHelper.getInstance().getNoteDao().queryForAll());
         } catch (Exception e) {
             e.printStackTrace();
         }
+        if (notesList.isEmpty()) {
+            showEmpty();
+        } else {
+        }
 
         adapter = new NoteAdapter(this, notesList);
+        list.setLayoutManager(new LinearLayoutManager(this));
         list.setAdapter(adapter);
-        list.setOnItemClickListener(createItemClickListener());
-        list.setOnItemLongClickListener(createItemLongClickListener());
-
         findViewById(R.id.addnote).setOnClickListener(createNoteOnClickListener());
 
         prepareTabs();
+
+        noteDelegate = new NotesManager.NoteDelegate() {
+            @Override
+            public void onNoteChanged(NoteDetails note) {
+
+            }
+
+            @Override
+            public void onDataChanged(int id) {
+                adapter.notifyDataSetChanged();
+            }
+        };
+    }
+
+    private void reloadNotes() {
+        if (isLoading)
+            return;
+        isLoading = true;
+
     }
 
     private void checkPermission(PermissionActivity.PermissionHandler handler) {
@@ -109,23 +145,14 @@ public class MainNoteActivity extends BaseActivity {
         // tabListener
         tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             public void onTabChanged(String tabId) {
-                adapter.clear();
-                List<NoteDetails> details = null;
-                try {
-                    details = DatabaseHelper.getInstance().getNoteDao().queryForAll();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
                 switch (tabId) {
                     case "alph":
-                        Collections.sort(details, new OrderComparator(DatabaseHelper.Order.ALPHABETHEADER));
+                        adapter.sortItems(DatabaseHelper.Order.ALPHABETHEADER);
                         break;
                     case "time":
-                        Collections.sort(details, new OrderComparator(DatabaseHelper.Order.TIME));
+                        adapter.sortItems(DatabaseHelper.Order.TIME);
                         break;
                 }
-                adapter.addAll(details);
-                adapter.notifyDataSetChanged();
             }
         });
         tabHost.setCurrentTab(0);
@@ -148,23 +175,10 @@ public class MainNoteActivity extends BaseActivity {
         return new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                NoteDetails details = adapter.getItem(position);
-                updateNoteList();
-                Utils.deletesCachedImages(MainNoteActivity.this, details.id + "");
+//                NoteDetails details = adapter.getItem(position);
+//                updateNoteList();
+//                Utils.deletesCachedImages(MainNoteActivity.this, details.id + "");
                 return true;
-            }
-        };
-    }
-
-    @NonNull
-    private AdapterView.OnItemClickListener createItemClickListener() {
-        return new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                NoteDetails details = adapter.getItem(position);
-                Intent i = new Intent(MainNoteActivity.this, NoteActivity.class);
-                i.putExtra(NOTETAG, details);
-                startActivity(i);
             }
         };
     }
@@ -200,7 +214,6 @@ public class MainNoteActivity extends BaseActivity {
                     @Override
                     public void run() {
                         DatabaseHelper.getInstance().deleteNotes();
-                        observers.notifyChange(MainNoteActivity.noteUri, null);
                     }
                 });
                 dialogConfirm.setCancelable(true);
@@ -218,79 +231,23 @@ public class MainNoteActivity extends BaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        ContentObserver observer = new ContentObserver(new Handler()) {
-            @Override
-            public void onChange(boolean selfChange) {
-                updateNoteList();
-            }
-        }; // Observer for updating listView
-        observers.register(noteUri, false, observer);
-        updateNoteList();
-        checkPermission(new PermissionActivity.PermissionHandler() {
-            @Override
-            public void onPermissionGranted() {
-                Toast.makeText(MainNoteActivity.this, R.string.perm_storage_success, Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onPermissionDenied() { // start app without loading custom book
-                Toast.makeText(MainNoteActivity.this, R.string.perm_storage_error, Toast.LENGTH_LONG).show();
-            }
-        });
-    }
-
-    private void updateNoteList() {
-        try {
-            List<NoteDetails> details = DatabaseHelper.getInstance().getNoteDao().queryForAll();
-            adapter.clear();
-            Collections.sort(details, new OrderComparator(DatabaseHelper.Order.ALPHABETHEADER));
-            adapter.addAll(details);
-            adapter.notifyDataSetChanged();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public class OrderComparator implements Comparator<NoteDetails> {
-        DatabaseHelper.Order order;
-
-        public OrderComparator(DatabaseHelper.Order order) {
-            this.order = order;
-        }
-
-        @Override
-        public int compare(NoteDetails o1, NoteDetails o2) {
-            switch (order) {
-                case ALPHABETHEADER:
-                    return o1.header.compareTo(o2.header);
-                case TIME:
-                    return o1.timestamp < (o2.timestamp) ? -1 : 1;
-            }
-            return 0;
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-
         switch (requestCode) {
             case SELECT_PHOTO:
                 if (resultCode == RESULT_OK) {
                     Uri selectedImage = intent.getData();
-                    InputStream imageStream = null;
                     try {
-                        imageStream = observers.openInputStream(selectedImage);
-                        Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                        Bitmap yourSelectedImage = Utils.getCorrectlyOrientedImage(MainNoteActivity.this, selectedImage);
                         Utils.saveBitmap(yourSelectedImage, String.valueOf(idNoteOnUpdate));
-                    } catch (FileNotFoundException e) {
+
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                     if (idNoteOnUpdate != -1) {
-                        adapter.getObservers().notifyChange(Utils.getImageUri(MainNoteActivity.this, idNoteOnUpdate), null);
+                        NotesManager.getInstance().notifyOnDataChanged(idNoteOnUpdate);
                         idNoteOnUpdate = -1;
                     }
                     return;
@@ -321,5 +278,53 @@ public class MainNoteActivity extends BaseActivity {
     int getMyId() {
         final VKAccessToken vkAccessToken = VKAccessToken.currentToken();
         return vkAccessToken != null ? Integer.parseInt(vkAccessToken.userId) : 0;
+    }
+
+    public void updateNotesList() {
+        notesList.clear();
+        try {
+            notesList.addAll(DatabaseHelper.getInstance().getNoteDao().queryForAll());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        adapter.setItems(notesList);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        checkPermission(new PermissionActivity.PermissionHandler() {
+            @Override
+            public void onPermissionGranted() {
+            }
+
+            @Override
+            public void onPermissionDenied() { // start app without loading custom book
+            }
+        });
+    }
+
+    public void refresh() {
+        if (adapter != null) {
+            isLoading = false;
+            updateNotesList();
+            mSwipeRefreshLayout.setRefreshing(false);
+            if (notesList.isEmpty()) {
+                showEmpty();
+            } else {
+                showContent();
+            }
+        }
+    }
+
+    protected void showContent() {
+        emptyView.setVisibility(View.GONE);
+        list.setVisibility(View.VISIBLE);
+    }
+
+    protected void showEmpty() {
+        Timber.d("show empty", new Object[0]);
+        emptyView.setVisibility(View.VISIBLE);
+        list.setVisibility(View.GONE);
     }
 }

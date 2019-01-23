@@ -41,6 +41,7 @@
     <string name="turn_on_permission_storage">Приложению требуется доступ к локальному хранилищу, чтобы сохранять данные</string>
     <string name="perm_storage_success">Разрешение для работы с изображениями дано</string>
     <string name="perm_storage_error">Разрешение для работы с изображениями отклонено</string>
+    <string name="notes_empty">Нет заметок</string>
 
 
 </resources>

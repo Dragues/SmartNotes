@@ -28,4 +28,7 @@
     <dimen name="coords_margintop">10dp</dimen>
     <dimen name="exit_dialog_width">50dp</dimen>
     <dimen name="dialog_photo_width">300dp</dimen>
+    <dimen name="note_item_height">140dp</dimen>
+    <dimen name="card_padding">0dp</dimen>
+    <dimen name="max_bitmap_height">300dp</dimen>
 </resources>

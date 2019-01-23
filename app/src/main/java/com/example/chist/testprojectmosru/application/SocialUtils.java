@@ -1,4 +1,4 @@
-package com.example.chist.testprojectmosru.Application;
+package com.example.chist.testprojectmosru.application;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,12 +12,9 @@ import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
 import com.vk.sdk.api.VKError;
-import com.vk.sdk.api.model.VKApiPhoto;
-import com.vk.sdk.api.model.VKPhotoArray;
 import com.vk.sdk.api.photo.VKImageParameters;
 import com.vk.sdk.api.photo.VKUploadImage;
 import com.vk.sdk.dialogs.VKShareDialog;
-import com.vk.sdk.dialogs.VKShareDialogBuilder;
 
 /**
  * Created by 1 on 05.03.2017.

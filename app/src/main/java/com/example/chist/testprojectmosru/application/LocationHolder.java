@@ -1,4 +1,4 @@
-package com.example.chist.testprojectmosru.Application;
+package com.example.chist.testprojectmosru.application;
 
 import android.Manifest;
 import android.content.Context;
@@ -122,6 +122,10 @@ public class LocationHolder {
         lastX = location.getLatitude();
         lastY = location.getLongitude();
         lastTimeUpdate = location.getTime();
+
+        if (LaunchApplication.getInstance().getCurrentActivity() != null) {
+
+        }
         context.getContentResolver().notifyChange(Utils.getGeoDataUriAdapter(context), null);
     }
 }

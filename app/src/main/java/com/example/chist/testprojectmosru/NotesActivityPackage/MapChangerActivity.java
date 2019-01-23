@@ -12,7 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.chist.testprojectmosru.Application.LocationHolder;
+import com.example.chist.testprojectmosru.application.LocationHolder;
 import com.example.chist.testprojectmosru.R;
 import com.example.chist.testprojectmosru.data.DatabaseHelper;
 import com.example.chist.testprojectmosru.data.NoteDetails;
