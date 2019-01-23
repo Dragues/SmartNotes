@@ -20,6 +20,7 @@
             <TabWidget
                 android:id="@android:id/tabs"
                 android:layout_width="match_parent"
+                android:background="@color/bg_tab_color"
                 android:layout_height="match_parent"></TabWidget>
 
             <FrameLayout
@@ -46,6 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/tabHost"
+        android:background="@color/bg_color"
         android:gravity="center"
         android:orientation="vertical">
 

@@ -82,6 +82,7 @@ public class NoteViewHolder extends RecyclerView.ViewHolder implements NotesMana
             Picasso.with(context)
                     .load(new File(Utils.getImagePathInDevice(false).getAbsolutePath() + "/" + id))
                     .transform(new CropTransformation((int) context.getResources().getDimension(R.dimen.icon_width) * 2))
+                    .skipMemoryCache()
                     .into(photo);
         } else {
             photo.setImageBitmap(BitmapFactory.decodeResource(LaunchApplication.getInstance().getResources(),
